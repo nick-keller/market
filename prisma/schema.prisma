@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String     @id
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  sessions      Session[]
+  accounts      Account[]
+  balance       Balance?
+  markets       Market[]
+  positions     Position[]
+  trades        Trade[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+  @@index([userId])
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+  @@index([identifier])
+}
+
+// ── Domain enums ──────────────────────────────────────────────
+
+enum MarketStatus {
+  OPEN
+  CLOSED
+  RESOLVED
+
+  @@map("market_status")
+}
+
+enum OutcomeType {
+  YES
+  NO
+
+  @@map("outcome_type")
+}
+
+// ── Domain models ─────────────────────────────────────────────
+
+model Balance {
+  userId    String   @id @map("user_id")
+  balance   Decimal  @default(0) @db.Decimal(20, 8)
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("balances")
+}
+
+model Market {
+  id             String        @id @default(uuid())
+  title          String
+  description    String?
+  creatorId      String?       @map("creator_id")
+  status         MarketStatus  @default(OPEN)
+  closeTime      DateTime?     @map("close_time")
+  resolvedAt     DateTime?     @map("resolved_at")
+  winningOutcome OutcomeType?  @map("winning_outcome")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  creator   User?        @relation(fields: [creatorId], references: [id])
+  state     MarketState?
+  positions Position[]
+  trades    Trade[]
+
+  @@map("markets")
+}
+
+model MarketState {
+  marketId   String   @id @map("market_id")
+  qYes       Decimal  @default(0) @map("q_yes") @db.Decimal(20, 8)
+  qNo        Decimal  @default(0) @map("q_no") @db.Decimal(20, 8)
+  liquidityB Decimal  @map("liquidity_b") @db.Decimal(20, 8)
+  volume     Decimal  @default(0) @db.Decimal(20, 8)
+  updatedAt  DateTime @default(now()) @map("updated_at")
+
+  market Market @relation(fields: [marketId], references: [id])
+
+  @@map("market_states")
+}
+
+model Position {
+  userId    String   @map("user_id")
+  marketId  String   @map("market_id")
+  yesShares Decimal  @default(0) @map("yes_shares") @db.Decimal(20, 8)
+  noShares  Decimal  @default(0) @map("no_shares") @db.Decimal(20, 8)
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  user   User   @relation(fields: [userId], references: [id])
+  market Market @relation(fields: [marketId], references: [id])
+
+  @@id([userId, marketId])
+  @@map("positions")
+}
+
+model Trade {
+  id         String      @id @default(uuid())
+  userId     String?     @map("user_id")
+  marketId   String?     @map("market_id")
+  outcome    OutcomeType
+  shares     Decimal     @db.Decimal(20, 8)
+  cost       Decimal     @db.Decimal(20, 8)
+  qYesBefore Decimal?    @map("q_yes_before") @db.Decimal(20, 8)
+  qNoBefore  Decimal?    @map("q_no_before") @db.Decimal(20, 8)
+  qYesAfter  Decimal?    @map("q_yes_after") @db.Decimal(20, 8)
+  qNoAfter   Decimal?    @map("q_no_after") @db.Decimal(20, 8)
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  user   User?   @relation(fields: [userId], references: [id])
+  market Market? @relation(fields: [marketId], references: [id])
+
+  @@map("trades")
+}
