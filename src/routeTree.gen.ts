@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UsersIndexRouteImport } from './routes/users/index'
 import { Route as UsersUserIdRouteImport } from './routes/users/$userId'
+import { Route as SettingsChangePasswordRouteImport } from './routes/settings/change-password'
 import { Route as MarketsCreateRouteImport } from './routes/markets/create'
 import { Route as MarketsMarketIdRouteImport } from './routes/markets/$marketId'
 import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
@@ -34,6 +35,11 @@ const UsersIndexRoute = UsersIndexRouteImport.update({
 const UsersUserIdRoute = UsersUserIdRouteImport.update({
   id: '/users/$userId',
   path: '/users/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsChangePasswordRoute = SettingsChangePasswordRouteImport.update({
+  id: '/settings/change-password',
+  path: '/settings/change-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketsCreateRoute = MarketsCreateRouteImport.update({
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/auth/sign-up': typeof AuthSignUpRoute
   '/markets/$marketId': typeof MarketsMarketIdRoute
   '/markets/create': typeof MarketsCreateRoute
+  '/settings/change-password': typeof SettingsChangePasswordRoute
   '/users/$userId': typeof UsersUserIdRoute
   '/users/': typeof UsersIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/auth/sign-up': typeof AuthSignUpRoute
   '/markets/$marketId': typeof MarketsMarketIdRoute
   '/markets/create': typeof MarketsCreateRoute
+  '/settings/change-password': typeof SettingsChangePasswordRoute
   '/users/$userId': typeof UsersUserIdRoute
   '/users': typeof UsersIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/auth/sign-up': typeof AuthSignUpRoute
   '/markets/$marketId': typeof MarketsMarketIdRoute
   '/markets/create': typeof MarketsCreateRoute
+  '/settings/change-password': typeof SettingsChangePasswordRoute
   '/users/$userId': typeof UsersUserIdRoute
   '/users/': typeof UsersIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/auth/sign-up'
     | '/markets/$marketId'
     | '/markets/create'
+    | '/settings/change-password'
     | '/users/$userId'
     | '/users/'
     | '/api/auth/$'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/auth/sign-up'
     | '/markets/$marketId'
     | '/markets/create'
+    | '/settings/change-password'
     | '/users/$userId'
     | '/users'
     | '/api/auth/$'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/auth/sign-up'
     | '/markets/$marketId'
     | '/markets/create'
+    | '/settings/change-password'
     | '/users/$userId'
     | '/users/'
     | '/api/auth/$'
@@ -167,6 +179,7 @@ export interface RootRouteChildren {
   AuthSignUpRoute: typeof AuthSignUpRoute
   MarketsMarketIdRoute: typeof MarketsMarketIdRoute
   MarketsCreateRoute: typeof MarketsCreateRoute
+  SettingsChangePasswordRoute: typeof SettingsChangePasswordRoute
   UsersUserIdRoute: typeof UsersUserIdRoute
   UsersIndexRoute: typeof UsersIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -194,6 +207,13 @@ declare module '@tanstack/react-router' {
       path: '/users/$userId'
       fullPath: '/users/$userId'
       preLoaderRoute: typeof UsersUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/change-password': {
+      id: '/settings/change-password'
+      path: '/settings/change-password'
+      fullPath: '/settings/change-password'
+      preLoaderRoute: typeof SettingsChangePasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/markets/create': {
@@ -263,6 +283,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthSignUpRoute: AuthSignUpRoute,
   MarketsMarketIdRoute: MarketsMarketIdRoute,
   MarketsCreateRoute: MarketsCreateRoute,
+  SettingsChangePasswordRoute: SettingsChangePasswordRoute,
   UsersUserIdRoute: UsersUserIdRoute,
   UsersIndexRoute: UsersIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

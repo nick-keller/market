@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { useState } from 'react'
 import { useSuspenseQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTRPC } from '#/integrations/trpc/react'
 import { authClient } from '#/lib/auth-client'
@@ -63,6 +64,12 @@ function UsersPage() {
         queryClient.invalidateQueries({ queryKey: trpc.user.adminList.queryKey() })
         queryClient.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
       },
+    }),
+  )
+  const [generatingResetLinkUserId, setGeneratingResetLinkUserId] = useState<string | null>(null)
+  const generateResetLinkMutation = useMutation(
+    trpc.user.generateResetPasswordLink.mutationOptions({
+      onSettled: () => setGeneratingResetLinkUserId(null),
     }),
   )
 
@@ -199,6 +206,28 @@ function UsersPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setGeneratingResetLinkUserId(user.id)
+                            generateResetLinkMutation.mutate(
+                              { userId: user.id },
+                              {
+                                onSuccess: async ({ link }) => {
+                                  await navigator.clipboard.writeText(link)
+                                  window.alert('Reset password link copied to clipboard.')
+                                },
+                                onError: (err) => {
+                                  window.alert(err.message ?? 'Failed to generate link')
+                                },
+                              },
+                            )
+                          }}
+                          disabled={generatingResetLinkUserId === user.id}
+                        >
+                          {generatingResetLinkUserId === user.id ? 'Generating...' : 'Generate reset link'}
+                        </Button>
                         {!user.emailVerified && (
                           <Button
                             size="sm"

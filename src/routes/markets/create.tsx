@@ -20,7 +20,6 @@ function CreateMarket() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [closeDate, setCloseDate] = useState('')
-  const [liquidityB, setLiquidityB] = useState('100')
 
   const createMutation = useMutation(
     trpc.markets.create.mutationOptions({
@@ -37,7 +36,7 @@ function CreateMarket() {
       title,
       description: description || undefined,
       closeTime: closeDate ? new Date(closeDate).toISOString() : undefined,
-      liquidityB: Number(liquidityB),
+      liquidityB: 100,
     })
   }
 
@@ -84,23 +83,6 @@ function CreateMarket() {
                 value={closeDate}
                 onChange={(e) => setCloseDate(e.target.value)}
               />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="liquidity">
-                Liquidity Parameter (b)
-              </Label>
-              <Input
-                id="liquidity"
-                type="number"
-                min={1}
-                max={10000}
-                value={liquidityB}
-                onChange={(e) => setLiquidityB(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Higher values make prices less sensitive to trades. Default: 100.
-              </p>
             </div>
 
             {createMutation.error && (

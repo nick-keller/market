@@ -3,6 +3,7 @@ import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, publicProcedure, authedProcedure, roleProcedure } from '../init'
 import { prisma } from '#/db'
 import { Role } from '#/generated/prisma/enums'
+import { auth, takeAdminResetLink } from '#/lib/auth'
 
 export const userRouter = createTRPCRouter({
   me: authedProcedure.query(({ ctx }) => ({
@@ -289,5 +290,35 @@ export const userRouter = createTRPCRouter({
       }
       await prisma.user.delete({ where: { id: input.userId } })
       return { success: true }
+    }),
+
+  generateResetPasswordLink: roleProcedure(Role.MANAGE_USERS)
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const user = await prisma.user.findUnique({
+        where: { id: input.userId },
+        select: { email: true },
+      })
+      if (!user?.email) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found',
+        })
+      }
+      const host = ctx.headers.get('host') ?? 'localhost'
+      const proto = ctx.headers.get('x-forwarded-proto') ?? 'http'
+      const redirectTo = `${proto}://${host}/auth/reset-password`
+      await auth.api.requestPasswordReset({
+        body: { email: user.email, redirectTo },
+        headers: ctx.headers,
+      })
+      const link = takeAdminResetLink(user.email)
+      if (!link) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to generate reset link',
+        })
+      }
+      return { link }
     }),
 })
