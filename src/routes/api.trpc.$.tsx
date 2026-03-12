@@ -1,13 +1,33 @@
-import { createServerFileRoute } from '@tanstack/react-start/server'
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 import { trpcRouter } from '#/integrations/trpc/router'
 import { createFileRoute } from '@tanstack/react-router'
+import { createTRPCContext } from '#/integrations/trpc/init.ts'
 
-function handler({ request }: { request: Request }) {
+function handler({
+  request,
+  params,
+}: {
+  request: Request
+  params: { _splat?: string }
+}) {
+  const url = new URL(request.url)
+  const pathPrefix = '/api/trpc'
+  const procedurePath = params._splat ?? ''
+  const pathname = procedurePath ? `${pathPrefix}/${procedurePath}` : pathPrefix
+  const resolvedUrl = `${url.origin}${pathname}${url.search}`
+
+  const trpcRequest = new Request(resolvedUrl, {
+    method: request.method,
+    headers: request.headers,
+    body: request.body,
+    ...(request.body != null && { duplex: 'half' as const }),
+  })
+
   return fetchRequestHandler({
-    req: request,
+    req: trpcRequest,
     router: trpcRouter,
     endpoint: '/api/trpc',
+    createContext: () => createTRPCContext({ request }),
   })
 }
 

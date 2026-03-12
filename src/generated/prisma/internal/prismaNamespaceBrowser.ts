@@ -51,11 +51,15 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  Todo: 'Todo',
   User: 'User',
   Session: 'Session',
   Account: 'Account',
-  Verification: 'Verification'
+  Verification: 'Verification',
+  Balance: 'Balance',
+  Market: 'Market',
+  MarketState: 'MarketState',
+  Position: 'Position',
+  Trade: 'Trade'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -72,15 +76,6 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 } as const)
 
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
-
-
-export const TodoScalarFieldEnum = {
-  id: 'id',
-  title: 'title',
-  createdAt: 'createdAt'
-} as const
-
-export type TodoScalarFieldEnum = (typeof TodoScalarFieldEnum)[keyof typeof TodoScalarFieldEnum]
 
 
 export const UserScalarFieldEnum = {
@@ -139,6 +134,70 @@ export const VerificationScalarFieldEnum = {
 } as const
 
 export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[keyof typeof VerificationScalarFieldEnum]
+
+
+export const BalanceScalarFieldEnum = {
+  userId: 'userId',
+  balance: 'balance',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BalanceScalarFieldEnum = (typeof BalanceScalarFieldEnum)[keyof typeof BalanceScalarFieldEnum]
+
+
+export const MarketScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  creatorId: 'creatorId',
+  status: 'status',
+  closeTime: 'closeTime',
+  resolvedAt: 'resolvedAt',
+  winningOutcome: 'winningOutcome',
+  createdAt: 'createdAt'
+} as const
+
+export type MarketScalarFieldEnum = (typeof MarketScalarFieldEnum)[keyof typeof MarketScalarFieldEnum]
+
+
+export const MarketStateScalarFieldEnum = {
+  marketId: 'marketId',
+  qYes: 'qYes',
+  qNo: 'qNo',
+  liquidityB: 'liquidityB',
+  volume: 'volume',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MarketStateScalarFieldEnum = (typeof MarketStateScalarFieldEnum)[keyof typeof MarketStateScalarFieldEnum]
+
+
+export const PositionScalarFieldEnum = {
+  userId: 'userId',
+  marketId: 'marketId',
+  yesShares: 'yesShares',
+  noShares: 'noShares',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PositionScalarFieldEnum = (typeof PositionScalarFieldEnum)[keyof typeof PositionScalarFieldEnum]
+
+
+export const TradeScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  marketId: 'marketId',
+  outcome: 'outcome',
+  shares: 'shares',
+  cost: 'cost',
+  qYesBefore: 'qYesBefore',
+  qNoBefore: 'qNoBefore',
+  qYesAfter: 'qYesAfter',
+  qNoAfter: 'qNoAfter',
+  createdAt: 'createdAt'
+} as const
+
+export type TradeScalarFieldEnum = (typeof TradeScalarFieldEnum)[keyof typeof TradeScalarFieldEnum]
 
 
 export const SortOrder = {

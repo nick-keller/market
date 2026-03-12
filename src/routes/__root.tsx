@@ -1,5 +1,6 @@
 import {
   HeadContent,
+  Link,
   Scripts,
   createRootRouteWithContext,
   redirect,
@@ -8,6 +9,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
+import { Button } from '@/components/ui/button'
 
 import TanStackQueryProvider from '../integrations/tanstack-query/root-provider'
 
@@ -22,7 +24,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import type { TRPCRouter } from '#/integrations/trpc/router'
 import type { TRPCOptionsProxy } from '@trpc/tanstack-react-query'
 
-export interface MyRouterContext {
+interface MyRouterContext {
   queryClient: QueryClient
   trpc: TRPCOptionsProxy<TRPCRouter>
 }
@@ -69,8 +71,24 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
     ],
   }),
+  notFoundComponent: NotFound,
   shellComponent: RootDocument,
 })
+
+function NotFound() {
+  return (
+    <main className="mx-auto flex max-w-md flex-col items-center px-4 pb-20 pt-24 text-center">
+      <p className="text-7xl font-bold tracking-tight">404</p>
+      <h1 className="mt-4 text-xl font-semibold">Page not found</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        The page you're looking for doesn't exist or has been moved.
+      </p>
+      <Button asChild className="mt-8">
+        <Link to="/">Go to Markets</Link>
+      </Button>
+    </main>
+  )
+}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (

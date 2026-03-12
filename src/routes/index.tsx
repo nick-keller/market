@@ -1,24 +1,65 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { Card, CardContent } from '@/components/ui/card'
+import { useState } from 'react'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { useTRPC } from '#/integrations/trpc/react'
+import { Button } from '@/components/ui/button'
+import MarketCard from '@/components/MarketCard'
+import MarketFilters from '@/components/MarketFilters'
 
-export const Route = createFileRoute('/')({ component: Home })
+export const Route = createFileRoute('/')({
+  component: Home,
+})
 
 function Home() {
+  const trpc = useTRPC()
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('OPEN')
+
+  const { data } = useSuspenseQuery(
+    trpc.markets.list.queryOptions({
+      search: search || undefined,
+      status: status !== 'ALL' ? (status as 'OPEN' | 'CLOSED' | 'RESOLVED') : undefined,
+      limit: 50,
+    }),
+  )
+
   return (
-    <main className="mx-auto max-w-5xl px-4 pb-8 pt-14">
-      <Card className="w-full">
-        <CardContent className="px-6 py-10 sm:px-10 sm:py-14">
-          <p className="mb-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Dashboard
+    <main className="mx-auto max-w-6xl px-4 pb-12 pt-8">
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Markets</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Browse prediction markets and trade on outcomes.
           </p>
-          <h1 className="mb-5 max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
-            Stoik Market
-          </h1>
-          <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
-            Welcome back. Your platform is ready.
-          </p>
-        </CardContent>
-      </Card>
+        </div>
+        <Button asChild>
+          <Link to="/markets/create">Create Market</Link>
+        </Button>
+      </div>
+
+      <div className="mb-6">
+        <MarketFilters
+          search={search}
+          onSearchChange={setSearch}
+          status={status}
+          onStatusChange={setStatus}
+        />
+      </div>
+
+      {data.markets.length === 0 ? (
+        <div className="flex h-48 flex-col items-center justify-center gap-3 rounded-xl border border-dashed">
+          <p className="text-muted-foreground">No markets found.</p>
+          <Button variant="outline" asChild>
+            <Link to="/markets/create">Create the first one</Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {data.markets.map((market) => (
+            <MarketCard key={market.id} market={market as any} />
+          ))}
+        </div>
+      )}
     </main>
   )
 }

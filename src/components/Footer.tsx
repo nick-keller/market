@@ -1,5 +1,12 @@
+import { useNavigate } from '@tanstack/react-router'
+import { authClient } from '#/lib/auth-client'
+import { Button } from '@/components/ui/button'
+import ThemeToggle from './ThemeToggle'
+
 export default function Footer() {
   const year = new Date().getFullYear()
+  const navigate = useNavigate()
+  const { data: session } = authClient.useSession()
 
   return (
     <footer className="mt-20 border-t px-4 pb-14 pt-10 text-muted-foreground">
@@ -7,6 +14,22 @@ export default function Footer() {
         <p className="m-0 text-sm">
           &copy; {year} Stoik Market. All rights reserved.
         </p>
+        <div className="flex items-center gap-3">
+          {session?.user && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
+              onClick={async () => {
+                await authClient.signOut()
+                navigate({ to: '/auth/sign-in' })
+              }}
+            >
+              Sign out
+            </Button>
+          )}
+          <ThemeToggle />
+        </div>
       </div>
     </footer>
   )

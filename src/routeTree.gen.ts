@@ -10,6 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UsersIndexRouteImport } from './routes/users/index'
+import { Route as UsersUserIdRouteImport } from './routes/users/$userId'
+import { Route as MarketsCreateRouteImport } from './routes/markets/create'
+import { Route as MarketsMarketIdRouteImport } from './routes/markets/$marketId'
 import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
 import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
@@ -20,6 +24,26 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UsersIndexRoute = UsersIndexRouteImport.update({
+  id: '/users/',
+  path: '/users/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UsersUserIdRoute = UsersUserIdRouteImport.update({
+  id: '/users/$userId',
+  path: '/users/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketsCreateRoute = MarketsCreateRouteImport.update({
+  id: '/markets/create',
+  path: '/markets/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketsMarketIdRoute = MarketsMarketIdRouteImport.update({
+  id: '/markets/$marketId',
+  path: '/markets/$marketId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthSignUpRoute = AuthSignUpRouteImport.update({
@@ -59,6 +83,10 @@ export interface FileRoutesByFullPath {
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
+  '/markets/$marketId': typeof MarketsMarketIdRoute
+  '/markets/create': typeof MarketsCreateRoute
+  '/users/$userId': typeof UsersUserIdRoute
+  '/users/': typeof UsersIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
@@ -68,6 +96,10 @@ export interface FileRoutesByTo {
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
+  '/markets/$marketId': typeof MarketsMarketIdRoute
+  '/markets/create': typeof MarketsCreateRoute
+  '/users/$userId': typeof UsersUserIdRoute
+  '/users': typeof UsersIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
@@ -78,6 +110,10 @@ export interface FileRoutesById {
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
+  '/markets/$marketId': typeof MarketsMarketIdRoute
+  '/markets/create': typeof MarketsCreateRoute
+  '/users/$userId': typeof UsersUserIdRoute
+  '/users/': typeof UsersIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
@@ -89,6 +125,10 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/auth/sign-in'
     | '/auth/sign-up'
+    | '/markets/$marketId'
+    | '/markets/create'
+    | '/users/$userId'
+    | '/users/'
     | '/api/auth/$'
     | '/api/trpc/$'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +138,10 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/auth/sign-in'
     | '/auth/sign-up'
+    | '/markets/$marketId'
+    | '/markets/create'
+    | '/users/$userId'
+    | '/users'
     | '/api/auth/$'
     | '/api/trpc/$'
   id:
@@ -107,6 +151,10 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/auth/sign-in'
     | '/auth/sign-up'
+    | '/markets/$marketId'
+    | '/markets/create'
+    | '/users/$userId'
+    | '/users/'
     | '/api/auth/$'
     | '/api/trpc/$'
   fileRoutesById: FileRoutesById
@@ -117,6 +165,10 @@ export interface RootRouteChildren {
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSignInRoute: typeof AuthSignInRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
+  MarketsMarketIdRoute: typeof MarketsMarketIdRoute
+  MarketsCreateRoute: typeof MarketsCreateRoute
+  UsersUserIdRoute: typeof UsersUserIdRoute
+  UsersIndexRoute: typeof UsersIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
 }
@@ -128,6 +180,34 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/users/': {
+      id: '/users/'
+      path: '/users'
+      fullPath: '/users/'
+      preLoaderRoute: typeof UsersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/users/$userId': {
+      id: '/users/$userId'
+      path: '/users/$userId'
+      fullPath: '/users/$userId'
+      preLoaderRoute: typeof UsersUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/markets/create': {
+      id: '/markets/create'
+      path: '/markets/create'
+      fullPath: '/markets/create'
+      preLoaderRoute: typeof MarketsCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/markets/$marketId': {
+      id: '/markets/$marketId'
+      path: '/markets/$marketId'
+      fullPath: '/markets/$marketId'
+      preLoaderRoute: typeof MarketsMarketIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/sign-up': {
@@ -181,6 +261,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSignInRoute: AuthSignInRoute,
   AuthSignUpRoute: AuthSignUpRoute,
+  MarketsMarketIdRoute: MarketsMarketIdRoute,
+  MarketsCreateRoute: MarketsCreateRoute,
+  UsersUserIdRoute: UsersUserIdRoute,
+  UsersIndexRoute: UsersIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
 }

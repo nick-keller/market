@@ -10,12 +10,12 @@ import { TRPCProvider } from '#/integrations/trpc/react'
 function getUrl() {
   const base = (() => {
     if (typeof window !== 'undefined') return ''
-    return `http://localhost:${process.env.PORT ?? 3000}`
+    return `http://localhost:${process.env.PORT ?? 3009}`
   })()
   return `${base}/api/trpc`
 }
 
-export const trpcClient = createTRPCClient<TRPCRouter>({
+const trpcClient = createTRPCClient<TRPCRouter>({
   links: [
     httpBatchStreamLink({
       transformer: superjson,
