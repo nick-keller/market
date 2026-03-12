@@ -104,8 +104,7 @@ function MarketDetail() {
   const isCreator = userId === market.creatorId
   const canOpenMarket = market.status === 'PENDING' && canValidateMarkets
   const canResolve =
-    (market.status === 'OPEN' || market.status === 'CLOSED') &&
-    (isCreator || canResolveMarkets)
+    (market.status === 'OPEN' || market.status === 'CLOSED') && canResolveMarkets
 
   return (
     <main className="mx-auto max-w-6xl px-4 pb-12 pt-8">

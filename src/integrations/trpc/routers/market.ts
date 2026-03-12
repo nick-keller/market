@@ -232,12 +232,10 @@ export const marketRouter = createTRPCRouter({
         include: { positions: true },
       })
 
-      const canResolve =
-        market.creatorId === ctx.user.id || hasRole(ctx.user.roles, Role.RESOLVE_MARKETS)
-      if (!canResolve) {
+      if (!hasRole(ctx.user.roles, Role.RESOLVE_MARKETS)) {
         throw new TRPCError({
           code: 'FORBIDDEN',
-          message: 'Only the creator or users with the resolve markets role can resolve this market',
+          message: 'Only users with the RESOLVE_MARKETS role can resolve markets',
         })
       }
       if (market.status !== 'OPEN' && market.status !== 'CLOSED') {
