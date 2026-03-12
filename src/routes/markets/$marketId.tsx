@@ -20,6 +20,7 @@ export const Route = createFileRoute('/markets/$marketId')({
 })
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
+  PENDING: 'secondary',
   OPEN: 'default',
   CLOSED: 'secondary',
   RESOLVED: 'outline',
@@ -53,6 +54,10 @@ function MarketDetail() {
     }
   }
 
+  const openMutation = useMutation(
+    trpc.markets.open.mutationOptions({ onSuccess: invalidate }),
+  )
+
   const buyMutation = useMutation(
     trpc.trade.buy.mutationOptions({ onSuccess: invalidate }),
   )
@@ -72,7 +77,13 @@ function MarketDetail() {
     ...trpc.user.profile.queryOptions({ userId: userId! }),
     enabled: !!userId,
   })
+  const { data: me } = useQuery({
+    ...trpc.user.me.queryOptions(),
+    enabled: !!userId,
+  })
   const userBalance = profileData?.balance ?? 1000
+  const canValidateMarkets = me?.roles?.includes('VALIDATE_MARKETS') ?? false
+  const canResolveMarkets = me?.roles?.includes('RESOLVE_MARKETS') ?? false
 
   const handleBuy = (outcome: Outcome, shares: number) => {
     buyMutation.mutate({ marketId, outcome, shares })
@@ -82,6 +93,10 @@ function MarketDetail() {
   }
 
   const isCreator = userId === market.creatorId
+  const canOpenMarket = market.status === 'PENDING' && canValidateMarkets
+  const canResolve =
+    (market.status === 'OPEN' || market.status === 'CLOSED') &&
+    (isCreator || canResolveMarkets)
 
   return (
     <main className="mx-auto max-w-6xl px-4 pb-12 pt-8">
@@ -126,7 +141,17 @@ function MarketDetail() {
             </div>
           </div>
 
-          {isCreator && market.status === 'OPEN' && (
+          {canOpenMarket && (
+            <Button
+              size="sm"
+              variant="default"
+              onClick={() => openMutation.mutate({ marketId })}
+              disabled={openMutation.isPending}
+            >
+              {openMutation.isPending ? 'Opening...' : 'Open market'}
+            </Button>
+          )}
+          {canResolve && (
             <div className="flex gap-2">
               <Button
                 size="sm"

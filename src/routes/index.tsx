@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
 import { useTRPC } from '#/integrations/trpc/react'
+import { authClient } from '#/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import MarketCard from '@/components/MarketCard'
 import MarketFilters from '@/components/MarketFilters'
@@ -14,11 +15,20 @@ function Home() {
   const trpc = useTRPC()
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('OPEN')
+  const { data: session } = authClient.useSession()
+  const { data: me } = useQuery({
+    ...trpc.user.me.queryOptions(),
+    enabled: !!session?.user,
+  })
+  const canViewPending = me?.roles?.includes('VALIDATE_MARKETS') ?? false
 
   const { data } = useSuspenseQuery(
     trpc.markets.list.queryOptions({
       search: search || undefined,
-      status: status !== 'ALL' ? (status as 'OPEN' | 'CLOSED' | 'RESOLVED') : undefined,
+      status:
+        status !== 'ALL'
+          ? (status as 'PENDING' | 'OPEN' | 'CLOSED' | 'RESOLVED')
+          : undefined,
       limit: 50,
     }),
   )
@@ -43,6 +53,7 @@ function Home() {
           onSearchChange={setSearch}
           status={status}
           onStatusChange={setStatus}
+          canViewPending={canViewPending}
         />
       </div>
 

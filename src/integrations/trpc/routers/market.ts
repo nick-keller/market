@@ -1,7 +1,10 @@
 import { z } from 'zod/v4'
-import { createTRPCRouter, publicProcedure, authedProcedure } from '../init'
+import { TRPCError } from '@trpc/server'
+import { createTRPCRouter, publicProcedure, authedProcedure, roleProcedure } from '../init'
 import { prisma } from '#/db'
 import type { Prisma } from '#/generated/prisma/client'
+import { hasRole } from '#/lib/roles'
+import { Role } from '#/generated/prisma/enums'
 
 const INITIAL_BALANCE = 1000
 const DEFAULT_LIQUIDITY = 100
@@ -18,15 +21,26 @@ export const marketRouter = createTRPCRouter({
   list: publicProcedure
     .input(
       z.object({
-        status: z.enum(['OPEN', 'CLOSED', 'RESOLVED']).optional(),
+        status: z.enum(['PENDING', 'OPEN', 'CLOSED', 'RESOLVED']).optional(),
         search: z.string().optional(),
         cursor: z.string().optional(),
         limit: z.number().min(1).max(50).default(20),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const where: Prisma.MarketWhereInput = {}
-      if (input.status) where.status = input.status
+      if (input.status) {
+        if (input.status === 'PENDING' && !hasRole(ctx.user?.roles, Role.VALIDATE_MARKETS)) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Only users with the validate markets role can view pending markets',
+          })
+        }
+        where.status = input.status
+      } else {
+        // Default: exclude PENDING so only validators see them when filtering
+        where.status = { not: 'PENDING' }
+      }
       if (input.search) {
         where.title = { contains: input.search, mode: 'insensitive' }
       }
@@ -55,7 +69,7 @@ export const marketRouter = createTRPCRouter({
 
   get: publicProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const market = await prisma.market.findUniqueOrThrow({
         where: { id: input.id },
         include: {
@@ -72,6 +86,17 @@ export const marketRouter = createTRPCRouter({
           },
         },
       })
+      if (market.status === 'PENDING') {
+        const canView =
+          ctx.user &&
+          (market.creatorId === ctx.user.id || hasRole(ctx.user.roles, Role.VALIDATE_MARKETS))
+        if (!canView) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Pending markets are only visible to the creator or users with the validate markets role',
+          })
+        }
+      }
 
       const userIds = market.positions.map((p) => p.userId)
       const trades = await prisma.trade.findMany({
@@ -113,6 +138,7 @@ export const marketRouter = createTRPCRouter({
           title: input.title,
           description: input.description,
           creatorId: ctx.user.id,
+          status: 'PENDING',
           closeTime: input.closeTime ? new Date(input.closeTime) : null,
           state: {
             create: {
@@ -129,6 +155,25 @@ export const marketRouter = createTRPCRouter({
       return market
     }),
 
+  open: roleProcedure(Role.VALIDATE_MARKETS)
+    .input(z.object({ marketId: z.string() }))
+    .mutation(async ({ input }) => {
+      const market = await prisma.market.findUniqueOrThrow({
+        where: { id: input.marketId },
+      })
+      if (market.status !== 'PENDING') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Only pending markets can be opened',
+        })
+      }
+      await prisma.market.update({
+        where: { id: input.marketId },
+        data: { status: 'OPEN' },
+      })
+      return { success: true }
+    }),
+
   resolve: authedProcedure
     .input(
       z.object({
@@ -142,11 +187,19 @@ export const marketRouter = createTRPCRouter({
         include: { positions: true },
       })
 
-      if (market.creatorId !== ctx.user.id) {
-        throw new Error('Only the creator can resolve this market')
+      const canResolve =
+        market.creatorId === ctx.user.id || hasRole(ctx.user.roles, Role.RESOLVE_MARKETS)
+      if (!canResolve) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Only the creator or users with the resolve markets role can resolve this market',
+        })
       }
-      if (market.status !== 'OPEN') {
-        throw new Error('Market is not open')
+      if (market.status !== 'OPEN' && market.status !== 'CLOSED') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Only open or closed markets can be resolved',
+        })
       }
 
       const winningField =

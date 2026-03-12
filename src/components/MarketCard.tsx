@@ -23,6 +23,7 @@ interface MarketCardProps {
 }
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
+  PENDING: 'secondary',
   OPEN: 'default',
   CLOSED: 'secondary',
   RESOLVED: 'outline',

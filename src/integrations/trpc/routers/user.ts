@@ -1,12 +1,20 @@
 import { z } from 'zod/v4'
 import { TRPCError } from '@trpc/server'
-import { createTRPCRouter, publicProcedure } from '../init'
+import { createTRPCRouter, publicProcedure, authedProcedure, roleProcedure } from '../init'
 import { prisma } from '#/db'
+import { Role } from '#/generated/prisma/enums'
 
 export const userRouter = createTRPCRouter({
+  me: authedProcedure.query(({ ctx }) => ({
+    id: ctx.user.id,
+    name: ctx.user.name,
+    email: ctx.user.email,
+    roles: ctx.user.roles,
+  })),
+
   profile: publicProcedure
     .input(z.object({ userId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const user = await prisma.user.findUnique({
         where: { id: input.userId },
         select: {
@@ -218,4 +226,68 @@ export const userRouter = createTRPCRouter({
       }
     })
   }),
+
+  adminList: roleProcedure(Role.MANAGE_USERS).query(async () => {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        emailVerified: true,
+        image: true,
+        roles: true,
+        createdAt: true,
+        balance: { select: { balance: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    })
+    return users.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      emailVerified: u.emailVerified,
+      image: u.image,
+      roles: u.roles ?? [],
+      createdAt: u.createdAt,
+      balance: u.balance ? Number(u.balance.balance) : 0,
+    }))
+  }),
+
+  updateRoles: roleProcedure(Role.MANAGE_USERS)
+    .input(
+      z.object({
+        userId: z.string(),
+        roles: z.array(z.enum(['VALIDATE_MARKETS', 'MANAGE_USERS', 'RESOLVE_MARKETS'])),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      await prisma.user.update({
+        where: { id: input.userId },
+        data: { roles: input.roles },
+      })
+      return { success: true }
+    }),
+
+  validateUser: roleProcedure(Role.MANAGE_USERS)
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ input }) => {
+      await prisma.user.update({
+        where: { id: input.userId },
+        data: { emailVerified: true },
+      })
+      return { success: true }
+    }),
+
+  remove: roleProcedure(Role.MANAGE_USERS)
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      if (input.userId === ctx.user.id) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'You cannot remove yourself',
+        })
+      }
+      await prisma.user.delete({ where: { id: input.userId } })
+      return { success: true }
+    }),
 })

@@ -12,6 +12,8 @@ interface MarketFiltersProps {
   onSearchChange: (value: string) => void
   status: string
   onStatusChange: (value: string) => void
+  /** When true, show PENDING option (validate markets role) */
+  canViewPending?: boolean
 }
 
 export default function MarketFilters({
@@ -19,6 +21,7 @@ export default function MarketFilters({
   onSearchChange,
   status,
   onStatusChange,
+  canViewPending = false,
 }: MarketFiltersProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -34,6 +37,9 @@ export default function MarketFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ALL">All Status</SelectItem>
+          {canViewPending && (
+            <SelectItem value="PENDING">Pending</SelectItem>
+          )}
           <SelectItem value="OPEN">Open</SelectItem>
           <SelectItem value="CLOSED">Closed</SelectItem>
           <SelectItem value="RESOLVED">Resolved</SelectItem>

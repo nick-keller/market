@@ -8,11 +8,12 @@ datasource db {
 }
 
 model User {
-  id            String     @id
+  id            String       @id
   name          String
   email         String
   emailVerified Boolean
   image         String?
+  roles         Role[]       @default([])
   createdAt     DateTime
   updatedAt     DateTime
   sessions      Session[]
@@ -76,7 +77,16 @@ model Verification {
 
 // ── Domain enums ──────────────────────────────────────────────
 
+enum Role {
+  VALIDATE_MARKETS
+  MANAGE_USERS
+  RESOLVE_MARKETS
+
+  @@map("role")
+}
+
 enum MarketStatus {
+  PENDING
   OPEN
   CLOSED
   RESOLVED
@@ -108,7 +118,7 @@ model Market {
   title          String
   description    String?
   creatorId      String?       @map("creator_id")
-  status         MarketStatus  @default(OPEN)
+  status         MarketStatus  @default(PENDING)
   closeTime      DateTime?     @map("close_time")
   resolvedAt     DateTime?     @map("resolved_at")
   winningOutcome OutcomeType?  @map("winning_outcome")

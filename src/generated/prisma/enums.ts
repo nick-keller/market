@@ -9,7 +9,17 @@
 * 🟢 You can import this file directly.
 */
 
+export const Role = {
+  VALIDATE_MARKETS: 'VALIDATE_MARKETS',
+  MANAGE_USERS: 'MANAGE_USERS',
+  RESOLVE_MARKETS: 'RESOLVE_MARKETS'
+} as const
+
+export type Role = (typeof Role)[keyof typeof Role]
+
+
 export const MarketStatus = {
+  PENDING: 'PENDING',
   OPEN: 'OPEN',
   CLOSED: 'CLOSED',
   RESOLVED: 'RESOLVED'
