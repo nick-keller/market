@@ -70,6 +70,15 @@ function MarketDetail() {
     trpc.markets.resolve.mutationOptions({ onSuccess: invalidate }),
   )
 
+  const deleteMutation = useMutation(
+    trpc.markets.delete.mutationOptions({
+      onSuccess: () => {
+        invalidate()
+        window.location.href = '/'
+      },
+    }),
+  )
+
   const userId = session?.user?.id
   const myPosition = market.positions.find((p) => p.userId === userId)
 
@@ -142,14 +151,28 @@ function MarketDetail() {
           </div>
 
           {canOpenMarket && (
-            <Button
-              size="sm"
-              variant="default"
-              onClick={() => openMutation.mutate({ marketId })}
-              disabled={openMutation.isPending}
-            >
-              {openMutation.isPending ? 'Opening...' : 'Open market'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => openMutation.mutate({ marketId })}
+                disabled={openMutation.isPending}
+              >
+                {openMutation.isPending ? 'Opening...' : 'Open market'}
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => {
+                  if (window.confirm('Delete this pending market? This cannot be undone.')) {
+                    deleteMutation.mutate({ marketId })
+                  }
+                }}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete market'}
+              </Button>
+            </div>
           )}
           {canResolve && (
             <div className="flex gap-2">

@@ -18,6 +18,18 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
   }),
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 100,
+    storage: 'database',
+    customRules: {
+      '/sign-in/email': { window: 10, max: 5 },
+      '/sign-up/email': { window: 60, max: 3 },
+      '/forget-password': { window: 60, max: 3 },
+      '/reset-password': { window: 60, max: 5 },
+    },
+  },
   emailVerification: {
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
@@ -47,12 +59,19 @@ export const auth = betterAuth({
       }
     }),
     after: createAuthMiddleware(async (ctx) => {
-      if (!ctx.path.startsWith('/sign-up')) return
-      const newSession = ctx.context.newSession
-      if (newSession?.user) {
+      const newSession = ctx.context.newSession as
+        | { user: { id: string } }
+        | undefined
+      const userId =
+        newSession?.user?.id ??
+        (ctx.path === '/get-session' &&
+          (ctx.context.returned as { user?: { id: string } } | undefined)?.user
+            ?.id)
+
+      if (userId) {
         await prisma.balance.upsert({
-          where: { userId: newSession.user.id },
-          create: { userId: newSession.user.id, balance: 1000 },
+          where: { userId },
+          create: { userId, balance: 1000 },
           update: {},
         })
       }

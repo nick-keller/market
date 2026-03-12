@@ -1,6 +1,6 @@
 import { z } from 'zod/v4'
 import { TRPCError } from '@trpc/server'
-import { createTRPCRouter, publicProcedure, authedProcedure, roleProcedure } from '../init'
+import { createTRPCRouter, authedProcedure, roleProcedure } from '../init'
 import { prisma } from '#/db'
 import type { Prisma } from '#/generated/prisma/client'
 import { hasRole } from '#/lib/roles'
@@ -18,7 +18,7 @@ async function ensureBalance(userId: string) {
 }
 
 export const marketRouter = createTRPCRouter({
-  list: publicProcedure
+  list: authedProcedure
     .input(
       z.object({
         status: z.enum(['PENDING', 'OPEN', 'CLOSED', 'RESOLVED']).optional(),
@@ -29,7 +29,29 @@ export const marketRouter = createTRPCRouter({
     )
     .query(async ({ input, ctx }) => {
       const where: Prisma.MarketWhereInput = {}
-      if (input.status) {
+      const includePendingInList =
+        (input.status === undefined || input.status === 'OPEN') &&
+        (hasRole(ctx.user?.roles, Role.VALIDATE_MARKETS) || !!ctx.user?.id)
+      const pendingCondition: Prisma.MarketWhereInput = hasRole(
+        ctx.user?.roles,
+        Role.VALIDATE_MARKETS,
+      )
+        ? { status: 'PENDING' }
+        : { status: 'PENDING', creatorId: ctx.user!.id }
+
+      if (input.status === undefined) {
+        // All Status: OPEN, CLOSED, RESOLVED, and optionally pending (all or own)
+        where.OR = [
+          { status: { in: ['OPEN', 'CLOSED', 'RESOLVED'] } },
+          ...(includePendingInList ? [pendingCondition] : []),
+        ]
+      } else if (input.status === 'OPEN') {
+        // Open: OPEN and optionally pending (all or own)
+        where.OR = [
+          { status: 'OPEN' },
+          ...(includePendingInList ? [pendingCondition] : []),
+        ]
+      } else {
         if (input.status === 'PENDING' && !hasRole(ctx.user?.roles, Role.VALIDATE_MARKETS)) {
           throw new TRPCError({
             code: 'FORBIDDEN',
@@ -37,9 +59,6 @@ export const marketRouter = createTRPCRouter({
           })
         }
         where.status = input.status
-      } else {
-        // Default: exclude PENDING so only validators see them when filtering
-        where.status = { not: 'PENDING' }
       }
       if (input.search) {
         where.title = { contains: input.search, mode: 'insensitive' }
@@ -67,7 +86,7 @@ export const marketRouter = createTRPCRouter({
       return { markets: marketsWithTotals, nextCursor }
     }),
 
-  get: publicProcedure
+  get: authedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input, ctx }) => {
       const market = await prisma.market.findUniqueOrThrow({
@@ -111,12 +130,17 @@ export const marketRouter = createTRPCRouter({
         )
       }
 
+      const positionsWithInvested = market.positions.map((p) => ({
+        ...p,
+        investedAmount: investedByUser.get(p.userId) ?? 0,
+      }))
+      positionsWithInvested.sort(
+        (a, b) => (b.investedAmount ?? 0) - (a.investedAmount ?? 0),
+      )
+
       return {
         ...market,
-        positions: market.positions.map((p) => ({
-          ...p,
-          investedAmount: investedByUser.get(p.userId) ?? 0,
-        })),
+        positions: positionsWithInvested,
         totalInvested: market.state ? Number(market.state.volume) : 0,
       }
     }),
@@ -171,6 +195,27 @@ export const marketRouter = createTRPCRouter({
         where: { id: input.marketId },
         data: { status: 'OPEN' },
       })
+      return { success: true }
+    }),
+
+  delete: roleProcedure(Role.VALIDATE_MARKETS)
+    .input(z.object({ marketId: z.string() }))
+    .mutation(async ({ input }) => {
+      const market = await prisma.market.findUniqueOrThrow({
+        where: { id: input.marketId },
+      })
+      if (market.status !== 'PENDING') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Only pending markets can be deleted',
+        })
+      }
+      await prisma.$transaction([
+        prisma.trade.deleteMany({ where: { marketId: input.marketId } }),
+        prisma.position.deleteMany({ where: { marketId: input.marketId } }),
+        prisma.marketState.deleteMany({ where: { marketId: input.marketId } }),
+        prisma.market.delete({ where: { id: input.marketId } }),
+      ])
       return { success: true }
     }),
 

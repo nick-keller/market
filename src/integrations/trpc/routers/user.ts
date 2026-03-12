@@ -1,6 +1,6 @@
 import { z } from 'zod/v4'
 import { TRPCError } from '@trpc/server'
-import { createTRPCRouter, publicProcedure, authedProcedure, roleProcedure } from '../init'
+import { createTRPCRouter, authedProcedure, roleProcedure } from '../init'
 import { prisma } from '#/db'
 import { Role } from '#/generated/prisma/enums'
 import { auth, takeAdminResetLink } from '#/lib/auth'
@@ -13,7 +13,7 @@ export const userRouter = createTRPCRouter({
     roles: ctx.user.roles,
   })),
 
-  profile: publicProcedure
+  profile: authedProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ input, ctx }) => {
       const user = await prisma.user.findUnique({
@@ -37,7 +37,7 @@ export const userRouter = createTRPCRouter({
       return { ...user, balance: balance ? Number(balance.balance) : 0 }
     }),
 
-  positions: publicProcedure
+  positions: authedProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ input }) => {
       const positions = await prisma.position.findMany({
@@ -77,7 +77,7 @@ export const userRouter = createTRPCRouter({
       }))
     }),
 
-  trades: publicProcedure
+  trades: authedProcedure
     .input(
       z.object({
         userId: z.string(),
@@ -105,7 +105,7 @@ export const userRouter = createTRPCRouter({
       return { trades, nextCursor }
     }),
 
-  results: publicProcedure
+  results: authedProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ input }) => {
       // Use trade history: positions are zeroed when a market resolves, so we must
@@ -191,7 +191,7 @@ export const userRouter = createTRPCRouter({
         })
     }),
 
-  list: publicProcedure.query(async () => {
+  list: authedProcedure.query(async () => {
     const users = await prisma.user.findMany({
       select: {
         id: true,
@@ -210,7 +210,7 @@ export const userRouter = createTRPCRouter({
       orderBy: { createdAt: 'asc' },
     })
 
-    return users.map((u) => {
+    const list = users.map((u) => {
       let totalPositionValue = 0
       for (const p of u.positions) {
         totalPositionValue += Number(p.yesShares) + Number(p.noShares)
@@ -226,6 +226,12 @@ export const userRouter = createTRPCRouter({
         totalShares: totalPositionValue,
       }
     })
+    list.sort((a, b) => {
+      const sharesDiff = b.totalShares - a.totalShares
+      if (sharesDiff !== 0) return sharesDiff
+      return b.balance - a.balance
+    })
+    return list
   }),
 
   adminList: roleProcedure(Role.MANAGE_USERS).query(async () => {

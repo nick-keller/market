@@ -1,6 +1,6 @@
 import { z } from 'zod/v4'
 import { TRPCError } from '@trpc/server'
-import { createTRPCRouter, publicProcedure, authedProcedure } from '../init'
+import { createTRPCRouter, authedProcedure } from '../init'
 import { prisma } from '#/db'
 import { costForShares, priceYes, priceNo } from '#/lib/lmsr'
 
@@ -189,7 +189,7 @@ export const tradeRouter = createTRPCRouter({
       })
     }),
 
-  history: publicProcedure
+  history: authedProcedure
     .input(
       z.object({
         marketId: z.string(),
@@ -199,7 +199,7 @@ export const tradeRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const trades = await prisma.trade.findMany({
         where: { marketId: input.marketId },
-        orderBy: { createdAt: 'asc' },
+        orderBy: { createdAt: 'desc' },
         take: input.limit,
         include: { user: { select: { id: true, name: true } } },
       })

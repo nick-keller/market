@@ -37,7 +37,9 @@ export default function MarketCard({ market }: MarketCardProps) {
 
   return (
     <Link to="/markets/$marketId" params={{ marketId: market.id }} className="no-underline">
-      <Card className="h-full transition-shadow hover:shadow-md">
+      <Card
+        className={`h-full transition-shadow hover:shadow-md ${market.status === 'PENDING' ? 'bg-yellow-50 dark:bg-yellow-950/30' : ''}`}
+      >
         <CardContent className="flex h-full flex-col gap-3 p-5">
           <div className="flex items-start justify-between gap-2">
             <h3 className="line-clamp-2 text-sm font-semibold leading-snug">
