@@ -21,7 +21,9 @@ model User {
   balance       Balance?
   markets       Market[]
   positions     Position[]
-  trades        Trade[]
+  trades             Trade[]
+  transactions       Transaction[]
+  userMarketResults  UserMarketResult[]
 
   @@unique([email])
   @@map("user")
@@ -110,6 +112,15 @@ enum OutcomeType {
   @@map("outcome_type")
 }
 
+enum TransactionType {
+  BUY
+  SELL
+  REWARD
+  WIN
+
+  @@map("transaction_type")
+}
+
 // ── Domain models ─────────────────────────────────────────────
 
 model Balance {
@@ -133,10 +144,11 @@ model Market {
   winningOutcome OutcomeType?  @map("winning_outcome")
   createdAt      DateTime      @default(now()) @map("created_at")
 
-  creator   User?        @relation(fields: [creatorId], references: [id])
-  state     MarketState?
-  positions Position[]
-  trades    Trade[]
+  creator           User?              @relation(fields: [creatorId], references: [id])
+  state             MarketState?
+  positions         Position[]
+  trades            Trade[]
+  userMarketResults UserMarketResult[]
 
   @@map("markets")
 }
@@ -185,4 +197,33 @@ model Trade {
   market Market? @relation(fields: [marketId], references: [id])
 
   @@map("trades")
+}
+
+model Transaction {
+  id        String          @id @default(uuid())
+  userId    String          @map("user_id")
+  amount    Decimal         @db.Decimal(20, 8)
+  type      TransactionType
+  message   String
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("transactions")
+}
+
+model UserMarketResult {
+  userId    String  @map("user_id")
+  marketId  String  @map("market_id")
+  payout    Decimal @db.Decimal(20, 8)
+  totalCost Decimal @map("total_cost") @db.Decimal(20, 8)
+  pnl       Decimal @db.Decimal(20, 8)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
+
+  @@id([userId, marketId])
+  @@map("user_market_results")
 }

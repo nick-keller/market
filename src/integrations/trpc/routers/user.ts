@@ -108,86 +108,31 @@ export const userRouter = createTRPCRouter({
   results: authedProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ input }) => {
-      // Use trade history: positions are zeroed when a market resolves, so we must
-      // derive shares from trades to know who won.
-      const trades = await prisma.trade.findMany({
+      const rows = await prisma.userMarketResult.findMany({
         where: { userId: input.userId },
         include: {
           market: {
             select: {
               id: true,
               title: true,
-              status: true,
               winningOutcome: true,
               resolvedAt: true,
             },
           },
         },
+        orderBy: { createdAt: 'desc' },
       })
 
-      const marketIds = [...new Set(trades.map((t) => t.marketId).filter(Boolean))] as string[]
-      if (marketIds.length === 0) return []
-
-      const resolvedMarkets = await prisma.market.findMany({
-        where: {
-          id: { in: marketIds },
-          status: 'RESOLVED',
-          winningOutcome: { not: null },
-        },
-        select: {
-          id: true,
-          title: true,
-          winningOutcome: true,
-          resolvedAt: true,
-        },
-      })
-
-      if (resolvedMarkets.length === 0) return []
-
-      const marketById = new Map(resolvedMarkets.map((m) => [m.id, m]))
-
-      type Agg = { yesShares: number; noShares: number; totalCost: number }
-      const byMarket = new Map<string, Agg>()
-      for (const t of trades) {
-        if (!t.marketId || !marketById.has(t.marketId)) continue
-        let agg = byMarket.get(t.marketId)
-        if (!agg) {
-          agg = { yesShares: 0, noShares: 0, totalCost: 0 }
-          byMarket.set(t.marketId, agg)
-        }
-        const shares = Number(t.shares)
-        if (t.outcome === 'YES') agg.yesShares += shares
-        else agg.noShares += shares
-        agg.totalCost += Number(t.cost)
-      }
-
-      return Array.from(byMarket.entries())
-        .map(([marketId, agg]) => {
-          const market = marketById.get(marketId)!
-          const winningOutcome = market.winningOutcome!
-          const winningShares =
-            winningOutcome === 'YES' ? agg.yesShares : agg.noShares
-          const losingShares =
-            winningOutcome === 'YES' ? agg.noShares : agg.yesShares
-          const payout = winningShares
-          const totalCost = agg.totalCost
-          const pnl = payout - totalCost
-          return {
-            marketId: market.id,
-            marketTitle: market.title,
-            winningOutcome,
-            payout,
-            totalCost,
-            pnl,
-            netWon: pnl > 0,
-            resolvedAt: market.resolvedAt,
-          }
-        })
-        .sort((a, b) => {
-          const dateA = a.resolvedAt ? new Date(a.resolvedAt).getTime() : 0
-          const dateB = b.resolvedAt ? new Date(b.resolvedAt).getTime() : 0
-          return dateB - dateA
-        })
+      return rows.map((r) => ({
+        marketId: r.market.id,
+        marketTitle: r.market.title,
+        winningOutcome: r.market.winningOutcome!,
+        payout: Number(r.payout),
+        totalCost: Number(r.totalCost),
+        pnl: Number(r.pnl),
+        netWon: Number(r.pnl) > 0,
+        resolvedAt: r.market.resolvedAt,
+      }))
     }),
 
   list: authedProcedure.query(async () => {

@@ -34,3 +34,13 @@ export const OutcomeType = {
 } as const
 
 export type OutcomeType = (typeof OutcomeType)[keyof typeof OutcomeType]
+
+
+export const TransactionType = {
+  BUY: 'BUY',
+  SELL: 'SELL',
+  REWARD: 'REWARD',
+  WIN: 'WIN'
+} as const
+
+export type TransactionType = (typeof TransactionType)[keyof typeof TransactionType]

@@ -279,6 +279,26 @@ export const marketRouter = createTRPCRouter({
       const winningField =
         input.winningOutcome === 'YES' ? 'yesShares' : 'noShares'
 
+      const trades = await prisma.trade.findMany({
+        where: { marketId: input.marketId },
+        select: { userId: true, outcome: true, shares: true, cost: true },
+      })
+
+      type Agg = { yesShares: number; noShares: number; totalCost: number }
+      const byUser = new Map<string, Agg>()
+      for (const t of trades) {
+        if (!t.userId) continue
+        let agg = byUser.get(t.userId)
+        if (!agg) {
+          agg = { yesShares: 0, noShares: 0, totalCost: 0 }
+          byUser.set(t.userId, agg)
+        }
+        const shares = Number(t.shares)
+        if (t.outcome === 'YES') agg.yesShares += shares
+        else agg.noShares += shares
+        agg.totalCost += Number(t.cost)
+      }
+
       await prisma.$transaction(async (tx) => {
         await tx.market.update({
           where: { id: input.marketId },
@@ -297,7 +317,30 @@ export const marketRouter = createTRPCRouter({
               create: { userId: pos.userId, balance: payout },
               update: { balance: { increment: payout } },
             })
+            await tx.transaction.create({
+              data: {
+                userId: pos.userId,
+                amount: payout,
+                type: 'WIN',
+                message: `You won ${payout.toFixed(2)} tokens on "${market.title}"`,
+              },
+            })
           }
+        }
+
+        for (const [userId, agg] of byUser) {
+          const winningShares =
+            input.winningOutcome === 'YES' ? agg.yesShares : agg.noShares
+          const pnl = winningShares - agg.totalCost
+          await tx.userMarketResult.create({
+            data: {
+              userId,
+              marketId: input.marketId,
+              payout: winningShares,
+              totalCost: agg.totalCost,
+              pnl,
+            },
+          })
         }
 
         await tx.position.updateMany({

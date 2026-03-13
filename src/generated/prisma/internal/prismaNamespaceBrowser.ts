@@ -60,7 +60,9 @@ export const ModelName = {
   Market: 'Market',
   MarketState: 'MarketState',
   Position: 'Position',
-  Trade: 'Trade'
+  Trade: 'Trade',
+  Transaction: 'Transaction',
+  UserMarketResult: 'UserMarketResult'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -210,6 +212,30 @@ export const TradeScalarFieldEnum = {
 } as const
 
 export type TradeScalarFieldEnum = (typeof TradeScalarFieldEnum)[keyof typeof TradeScalarFieldEnum]
+
+
+export const TransactionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  amount: 'amount',
+  type: 'type',
+  message: 'message',
+  createdAt: 'createdAt'
+} as const
+
+export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
+
+
+export const UserMarketResultScalarFieldEnum = {
+  userId: 'userId',
+  marketId: 'marketId',
+  payout: 'payout',
+  totalCost: 'totalCost',
+  pnl: 'pnl',
+  createdAt: 'createdAt'
+} as const
+
+export type UserMarketResultScalarFieldEnum = (typeof UserMarketResultScalarFieldEnum)[keyof typeof UserMarketResultScalarFieldEnum]
 
 
 export const SortOrder = {

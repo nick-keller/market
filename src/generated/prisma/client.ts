@@ -91,3 +91,13 @@ export type Position = Prisma.PositionModel
  * 
  */
 export type Trade = Prisma.TradeModel
+/**
+ * Model Transaction
+ * 
+ */
+export type Transaction = Prisma.TransactionModel
+/**
+ * Model UserMarketResult
+ * 
+ */
+export type UserMarketResult = Prisma.UserMarketResultModel

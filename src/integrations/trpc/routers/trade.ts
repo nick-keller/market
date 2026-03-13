@@ -79,19 +79,29 @@ export const tradeRouter = createTRPCRouter({
           },
         })
 
-        const trade = await tx.trade.create({
-          data: {
-            userId: ctx.user.id,
-            marketId: input.marketId,
-            outcome: input.outcome,
-            shares: input.shares,
-            cost: tradeCost,
-            qYesBefore: qYes,
-            qNoBefore: qNo,
-            qYesAfter: newQYes,
-            qNoAfter: newQNo,
-          },
-        })
+        const [trade] = await Promise.all([
+          tx.trade.create({
+            data: {
+              userId: ctx.user.id,
+              marketId: input.marketId,
+              outcome: input.outcome,
+              shares: input.shares,
+              cost: tradeCost,
+              qYesBefore: qYes,
+              qNoBefore: qNo,
+              qYesAfter: newQYes,
+              qNoAfter: newQNo,
+            },
+          }),
+          tx.transaction.create({
+            data: {
+              userId: ctx.user.id,
+              amount: tradeCost,
+              type: 'BUY',
+              message: `You bought ${input.shares} ${input.outcome} shares of ${market.title}`,
+            },
+          }),
+        ])
 
         return {
           trade,
@@ -166,19 +176,29 @@ export const tradeRouter = createTRPCRouter({
           },
         })
 
-        const trade = await tx.trade.create({
-          data: {
-            userId: ctx.user.id,
-            marketId: input.marketId,
-            outcome: input.outcome,
-            shares: -input.shares,
-            cost: -refund,
-            qYesBefore: qYes,
-            qNoBefore: qNo,
-            qYesAfter: newQYes,
-            qNoAfter: newQNo,
-          },
-        })
+        const [trade] = await Promise.all([
+          tx.trade.create({
+            data: {
+              userId: ctx.user.id,
+              marketId: input.marketId,
+              outcome: input.outcome,
+              shares: -input.shares,
+              cost: -refund,
+              qYesBefore: qYes,
+              qNoBefore: qNo,
+              qYesAfter: newQYes,
+              qNoAfter: newQNo,
+            },
+          }),
+          tx.transaction.create({
+            data: {
+              userId: ctx.user.id,
+              amount: refund,
+              type: 'SELL',
+              message: `You sold ${input.shares} ${input.outcome} shares of ${market.title}`,
+            },
+          }),
+        ])
 
         return {
           trade,

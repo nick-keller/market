@@ -69,11 +69,20 @@ export const auth = betterAuth({
             ?.id)
 
       if (userId) {
-        await prisma.balance.upsert({
-          where: { userId },
-          create: { userId, balance: 1000 },
-          update: {},
-        })
+        const existing = await prisma.balance.findUnique({ where: { userId } })
+        if (!existing) {
+          await prisma.$transaction([
+            prisma.balance.create({ data: { userId, balance: 1000 } }),
+            prisma.transaction.create({
+              data: {
+                userId,
+                amount: 1000,
+                type: 'REWARD',
+                message: 'Welcome to StoikMarket, time to make some gains',
+              },
+            }),
+          ])
+        }
       }
     }),
   },
