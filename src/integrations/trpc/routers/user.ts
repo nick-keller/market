@@ -135,6 +135,108 @@ export const userRouter = createTRPCRouter({
       }))
     }),
 
+  stats: authedProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ input }) => {
+      const [positions, marketsCount, results] = await Promise.all([
+        prisma.position.findMany({
+          where: {
+            userId: input.userId,
+            OR: [{ yesShares: { gt: 0 } }, { noShares: { gt: 0 } }],
+          },
+          select: { yesShares: true, noShares: true },
+        }),
+        prisma.market.count({
+          where: { creatorId: input.userId },
+        }),
+        prisma.userMarketResult.findMany({
+          where: { userId: input.userId },
+          select: { payout: true, pnl: true },
+        }),
+      ])
+
+      let totalShares = 0
+      for (const p of positions) {
+        totalShares += Number(p.yesShares) + Number(p.noShares)
+      }
+
+      let wins = 0
+      let biggestPayout = 0
+      let biggestPnl = 0
+      for (const r of results) {
+        const pnl = Number(r.pnl)
+        const payout = Number(r.payout)
+        if (pnl > 0) wins++
+        if (payout > biggestPayout) biggestPayout = payout
+        if (pnl > biggestPnl) biggestPnl = pnl
+      }
+
+      return {
+        positionCount: positions.length,
+        totalShares,
+        marketsCreated: marketsCount,
+        wins,
+        biggestPayout,
+        biggestPnl,
+      }
+    }),
+
+  leaderboardTop: authedProcedure.query(async () => {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        balance: { select: { balance: true } },
+        positions: {
+          where: {
+            OR: [{ yesShares: { gt: 0 } }, { noShares: { gt: 0 } }],
+          },
+          select: { yesShares: true, noShares: true },
+        },
+        _count: {
+          select: { markets: true },
+        },
+        userMarketResults: {
+          select: { payout: true, pnl: true },
+        },
+      },
+    })
+
+    return users.map((u) => {
+      let totalShares = 0
+      for (const p of u.positions) {
+        totalShares += Number(p.yesShares) + Number(p.noShares)
+      }
+
+      let wins = 0
+      let biggestPayout = 0
+      let biggestPnl = 0
+      for (const r of u.userMarketResults) {
+        const pnl = Number(r.pnl)
+        const payout = Number(r.payout)
+        if (pnl > 0) wins++
+        if (payout > biggestPayout) biggestPayout = payout
+        if (pnl > biggestPnl) biggestPnl = pnl
+      }
+
+      return {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        image: u.image,
+        balance: u.balance ? Number(u.balance.balance) : 0,
+        positionCount: u.positions.length,
+        totalShares,
+        marketsCreated: u._count.markets,
+        wins,
+        biggestPayout,
+        biggestPnl,
+      }
+    })
+  }),
+
   list: authedProcedure.query(async () => {
     const users = await prisma.user.findMany({
       select: {

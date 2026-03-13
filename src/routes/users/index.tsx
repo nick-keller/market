@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTRPC } from '#/integrations/trpc/react'
 import { authClient } from '#/lib/auth-client'
+import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -44,16 +45,193 @@ function LeaderboardRowSkeleton() {
           </div>
         </div>
       </TableCell>
-      <TableCell className="text-right">
-        <Skeleton className="ml-auto h-4 w-16" />
-      </TableCell>
-      <TableCell className="text-right">
-        <Skeleton className="ml-auto h-4 w-8" />
-      </TableCell>
-      <TableCell className="text-right">
-        <Skeleton className="ml-auto h-4 w-14" />
-      </TableCell>
+      {Array.from({ length: 7 }).map((_, i) => (
+        <TableCell key={i} className="text-right">
+          <Skeleton className="ml-auto h-4 w-14" />
+        </TableCell>
+      ))}
     </TableRow>
+  )
+}
+
+const PODIUM_CATEGORIES = [
+  { value: 'totalShares', label: 'Most shares' },
+  { value: 'positionCount', label: 'Most positions' },
+  { value: 'balance', label: 'More tokens' },
+  { value: 'marketsCreated', label: 'Most markets created' },
+  { value: 'wins', label: 'Most wins' },
+  { value: 'biggestPayout', label: 'Biggest payout' },
+  { value: 'biggestPnl', label: 'Biggest PnL' },
+] as const
+
+type PodiumCategory = (typeof PODIUM_CATEGORIES)[number]['value']
+
+type LeaderboardUser = {
+  id: string
+  name: string
+  email: string
+  image: string | null
+} & Record<PodiumCategory, number>
+
+const PODIUM_PLACES = [
+  {
+    place: 2,
+    medal: '🥈',
+    height: 'h-20',
+    avatarSize: 'h-12 w-12',
+    bg: 'bg-gradient-to-b from-zinc-300 to-zinc-400 dark:from-zinc-500 dark:to-zinc-600',
+    text: 'text-zinc-600 dark:text-zinc-300',
+    ring: 'ring-zinc-300 dark:ring-zinc-500',
+  },
+  {
+    place: 1,
+    medal: '🥇',
+    height: 'h-28',
+    avatarSize: 'h-16 w-16',
+    bg: 'bg-gradient-to-b from-yellow-400 to-amber-500',
+    text: 'text-yellow-800 dark:text-yellow-200',
+    ring: 'ring-yellow-400',
+  },
+  {
+    place: 3,
+    medal: '🥉',
+    height: 'h-14',
+    avatarSize: 'h-12 w-12',
+    bg: 'bg-gradient-to-b from-amber-600 to-amber-700',
+    text: 'text-amber-200',
+    ring: 'ring-amber-600',
+  },
+]
+
+const TABLE_COLUMNS: { key: PodiumCategory; label: string; format: (v: number) => string }[] = [
+  { key: 'balance', label: 'Balance', format: (v) => v.toFixed(2) },
+  { key: 'positionCount', label: 'Positions', format: (v) => v.toString() },
+  { key: 'totalShares', label: 'Shares', format: (v) => v.toFixed(2) },
+  { key: 'marketsCreated', label: 'Markets', format: (v) => v.toString() },
+  { key: 'wins', label: 'Wins', format: (v) => v.toString() },
+  { key: 'biggestPayout', label: 'Best Payout', format: (v) => v.toFixed(2) },
+  { key: 'biggestPnl', label: 'Best PnL', format: (v) => (v >= 0 ? '+' : '') + v.toFixed(2) },
+]
+
+function formatPodiumValue(category: PodiumCategory, value: number): string {
+  switch (category) {
+    case 'positionCount':
+    case 'marketsCreated':
+    case 'wins':
+      return value.toLocaleString()
+    case 'biggestPnl':
+      return (value >= 0 ? '+' : '') + value.toFixed(2)
+    default:
+      return value.toFixed(2)
+  }
+}
+
+function PodiumSkeleton() {
+  return (
+    <div className="flex items-end justify-center gap-3 pt-10 sm:gap-6">
+      {PODIUM_PLACES.map((config) => (
+        <div key={config.place} className="flex flex-col items-center">
+          <Skeleton className={cn('rounded-full', config.avatarSize)} />
+          <Skeleton className="mt-2 h-4 w-16" />
+          <Skeleton className="mt-1 h-3 w-12" />
+          <Skeleton className={cn('mt-3 w-24 rounded-t-lg sm:w-28', config.height)} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function LeaderboardPodium({
+  sortedUsers,
+  category,
+  setCategory,
+  isPending,
+}: {
+  sortedUsers: LeaderboardUser[]
+  category: PodiumCategory
+  setCategory: (c: PodiumCategory) => void
+  isPending: boolean
+}) {
+  const top3 = sortedUsers.slice(0, 3)
+
+  const podiumEntries =
+    top3.length < 3
+      ? top3.map((user, i) => ({ user, config: PODIUM_PLACES[i]! }))
+      : [
+          { user: top3[1]!, config: PODIUM_PLACES[0]! },
+          { user: top3[0]!, config: PODIUM_PLACES[1]! },
+          { user: top3[2]!, config: PODIUM_PLACES[2]! },
+        ]
+
+  return (
+    <Card className="mb-6">
+      <CardContent className="pb-6 pt-5">
+        <div className="mb-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+          <h2 className="text-lg font-semibold">Top Traders</h2>
+          <Select value={category} onValueChange={(v) => setCategory(v as PodiumCategory)}>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PODIUM_CATEGORIES.map((c) => (
+                <SelectItem key={c.value} value={c.value}>
+                  {c.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {isPending ? (
+          <PodiumSkeleton />
+        ) : podiumEntries.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No data for this category yet.
+          </p>
+        ) : (
+          <div className="flex items-end justify-center gap-3 pt-4 sm:gap-6">
+            {podiumEntries.map(({ user, config }) => (
+              <div key={user.id} className="flex flex-col items-center">
+                <span className="text-2xl">{config.medal}</span>
+                <Link
+                  to="/users/$userId"
+                  params={{ userId: user.id }}
+                  className="group flex flex-col items-center"
+                >
+                  <Avatar className={cn('ring-2', config.ring, config.avatarSize)}>
+                    <AvatarFallback
+                      className={cn(
+                        'bg-accent font-semibold text-primary',
+                        config.place === 1 ? 'text-base' : 'text-sm',
+                      )}
+                    >
+                      {user.name?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <p className="mt-1.5 max-w-20 truncate text-sm font-semibold group-hover:underline sm:max-w-28">
+                    {user.name}
+                  </p>
+                </Link>
+                <p className="font-mono text-xs text-muted-foreground">
+                  {formatPodiumValue(category, user[category])}
+                </p>
+                <div
+                  className={cn(
+                    'mt-3 flex w-20 items-center justify-center rounded-t-lg sm:w-28',
+                    config.height,
+                    config.bg,
+                  )}
+                >
+                  <span className={cn('text-2xl font-bold', config.text)}>
+                    {config.place}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
@@ -67,9 +245,17 @@ function UsersPage() {
   })
   const canManageUsers = me?.roles.includes('MANAGE_USERS') ?? false
 
-  const { data: users, isPending } = useQuery(
-    trpc.user.list.queryOptions(),
+  const [category, setCategory] = useState<PodiumCategory>('totalShares')
+
+  const { data: allUsers, isPending } = useQuery(
+    trpc.user.leaderboardTop.queryOptions(),
   )
+
+  const sortedUsers = useMemo(() => {
+    if (!allUsers) return []
+    return [...allUsers].sort((a, b) => b[category] - a[category])
+  }, [allUsers, category])
+
   const { data: adminUsers } = useQuery({
     ...trpc.user.adminList.queryOptions(),
     enabled: canManageUsers,
@@ -91,7 +277,7 @@ function UsersPage() {
     trpc.user.remove.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.user.adminList.queryKey() })
-        queryClient.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
+        queryClient.invalidateQueries({ queryKey: trpc.user.leaderboardTop.queryKey() })
       },
     }),
   )
@@ -107,20 +293,35 @@ function UsersPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Leaderboard</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          All traders with their current balance and open positions.
+          All traders ranked by performance.
         </p>
       </div>
 
+      <LeaderboardPodium
+        sortedUsers={sortedUsers}
+        category={category}
+        setCategory={setCategory}
+        isPending={isPending}
+      />
+
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="overflow-x-auto p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">#</TableHead>
                 <TableHead>User</TableHead>
-                <TableHead className="text-right">Balance</TableHead>
-                <TableHead className="text-right">Positions</TableHead>
-                <TableHead className="text-right">Total Shares</TableHead>
+                {TABLE_COLUMNS.map((col) => (
+                  <TableHead
+                    key={col.key}
+                    className={cn(
+                      'whitespace-nowrap text-right',
+                      category === col.key && 'text-foreground',
+                    )}
+                  >
+                    {col.label}
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -128,14 +329,14 @@ function UsersPage() {
                 Array.from({ length: 8 }).map((_, i) => (
                   <LeaderboardRowSkeleton key={i} />
                 ))
-              ) : users!.length === 0 ? (
+              ) : sortedUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={2 + TABLE_COLUMNS.length} className="h-24 text-center text-muted-foreground">
                     No users found.
                   </TableCell>
                 </TableRow>
               ) : (
-                users!.map((user, i) => (
+                sortedUsers.map((user, i) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-mono text-sm text-muted-foreground">
                       {i + 1}
@@ -157,15 +358,19 @@ function UsersPage() {
                         </div>
                       </Link>
                     </TableCell>
-                    <TableCell className="text-right font-mono text-sm font-semibold">
-                      {user.balance.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-sm">
-                      {user.positionCount}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-sm">
-                      {user.totalShares.toFixed(2)}
-                    </TableCell>
+                    {TABLE_COLUMNS.map((col) => (
+                      <TableCell
+                        key={col.key}
+                        className={cn(
+                          'text-right font-mono text-sm',
+                          category === col.key && 'font-semibold',
+                          col.key === 'biggestPnl' && user.biggestPnl > 0 && 'text-emerald-600 dark:text-emerald-400',
+                          col.key === 'biggestPnl' && user.biggestPnl < 0 && 'text-rose-500 dark:text-rose-400',
+                        )}
+                      >
+                        {col.format(user[col.key])}
+                      </TableCell>
+                    ))}
                   </TableRow>
                 ))
               )}

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useTRPC } from '#/integrations/trpc/react'
+import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -73,7 +74,9 @@ function UserProfile() {
     trpc.user.results.queryOptions({ userId }),
   )
 
-  console.log(results)
+  const { data: stats, isPending: statsPending } = useQuery(
+    trpc.user.stats.queryOptions({ userId }),
+  )
 
   const wins = results?.filter((r) => r.netWon) ?? []
   const losses = results?.filter((r) => !r.netWon) ?? []
@@ -84,25 +87,80 @@ function UserProfile() {
         <ProfileCardSkeleton />
       ) : (
         <Card className="mb-8">
-          <CardContent className="flex items-center gap-5 p-6">
-            <Avatar className="h-16 w-16">
-              <AvatarFallback className="bg-accent text-xl font-bold text-primary">
-                {profile.name?.charAt(0).toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold">{profile.name}</h1>
-              <p className="text-sm text-muted-foreground">{profile.email}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Joined {new Date(profile.createdAt).toLocaleDateString()}
-              </p>
+          <CardContent>
+            <div className="flex items-center gap-5 p-6">
+              <Avatar className="h-16 w-16">
+                <AvatarFallback className="bg-accent text-xl font-bold text-primary">
+                  {profile.name?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold">{profile.name}</h1>
+                <p className="text-sm text-muted-foreground">{profile.email}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Joined {new Date(profile.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Balance
+                </p>
+                <p className="text-2xl font-bold">
+                  {profile.balance.toFixed(2)}
+                </p>
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Balance
-              </p>
-              <p className="text-2xl font-bold">{profile.balance.toFixed(2)}</p>
-            </div>
+            {stats ? (
+              <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {(
+                  [
+                    {
+                      label: 'Total Shares',
+                      value: stats.totalShares.toFixed(2),
+                    },
+                    {
+                      label: 'Positions',
+                      value: stats.positionCount.toString(),
+                    },
+                    {
+                      label: 'Markets Created',
+                      value: stats.marketsCreated.toString(),
+                    },
+                    { label: 'Wins', value: stats.wins.toString() },
+                    {
+                      label: 'Best Payout',
+                      value: stats.biggestPayout.toFixed(2),
+                    },
+                    {
+                      label: 'Best PnL',
+                      value:
+                        (stats.biggestPnl >= 0 ? '+' : '') +
+                        stats.biggestPnl.toFixed(2),
+                      className:
+                        stats.biggestPnl > 0
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : stats.biggestPnl < 0
+                            ? 'text-rose-500 dark:text-rose-400'
+                            : '',
+                    },
+                  ] as const
+                ).map((stat) => (
+                  <div key={stat.label}>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      {stat.label}
+                    </p>
+                    <p
+                      className={cn(
+                        'mt-1 font-mono text-2xl font-bold',
+                        'className' in stat && stat.className,
+                      )}
+                    >
+                      {stat.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       )}
@@ -140,10 +198,7 @@ function UserProfile() {
           ) : (
             <Card>
               <CardContent className="p-4">
-                <TradeHistory
-                  trades={tradesData.trades as any[]}
-                  showMarket
-                />
+                <TradeHistory trades={tradesData.trades as any[]} showMarket />
               </CardContent>
             </Card>
           )}
@@ -160,7 +215,9 @@ function UserProfile() {
                     Wins ({wins.length})
                   </h3>
                   {wins.length === 0 ? (
-                    <p className="py-6 text-center text-sm text-muted-foreground">No wins yet.</p>
+                    <p className="py-6 text-center text-sm text-muted-foreground">
+                      No wins yet.
+                    </p>
                   ) : (
                     <ResultsList results={wins} />
                   )}
@@ -173,7 +230,9 @@ function UserProfile() {
                     Losses ({losses.length})
                   </h3>
                   {losses.length === 0 ? (
-                    <p className="py-6 text-center text-sm text-muted-foreground">No losses yet.</p>
+                    <p className="py-6 text-center text-sm text-muted-foreground">
+                      No losses yet.
+                    </p>
                   ) : (
                     <ResultsList results={losses} />
                   )}
@@ -250,7 +309,8 @@ function ResultsList({ results }: { results: MarketResult[] }) {
                     : 'text-muted-foreground'
               }`}
             >
-              {r.pnl >= 0 ? '+' : ''}{r.pnl.toFixed(2)}
+              {r.pnl >= 0 ? '+' : ''}
+              {r.pnl.toFixed(2)}
             </TableCell>
             <TableCell className="text-right text-xs text-muted-foreground">
               {r.resolvedAt
