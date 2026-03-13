@@ -134,15 +134,16 @@ model Balance {
 }
 
 model Market {
-  id             String        @id @default(uuid())
-  title          String
-  description    String?
-  creatorId      String?       @map("creator_id")
-  status         MarketStatus  @default(PENDING)
-  closeTime      DateTime?     @map("close_time")
-  resolvedAt     DateTime?     @map("resolved_at")
-  winningOutcome OutcomeType?  @map("winning_outcome")
-  createdAt      DateTime      @default(now()) @map("created_at")
+  id                          String        @id @default(uuid())
+  title                       String
+  description                 String?
+  creatorId                   String?       @map("creator_id")
+  status                      MarketStatus  @default(PENDING)
+  closeTime                   DateTime?     @map("close_time")
+  resolvedAt                  DateTime?     @map("resolved_at")
+  winningOutcome              OutcomeType?  @map("winning_outcome")
+  authorPositionRewardGranted Boolean       @default(false) @map("author_position_reward_granted")
+  createdAt                   DateTime      @default(now()) @map("created_at")
 
   creator           User?              @relation(fields: [creatorId], references: [id])
   state             MarketState?

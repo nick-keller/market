@@ -222,10 +222,32 @@ export const marketRouter = createTRPCRouter({
           message: 'Only pending markets can be opened',
         })
       }
-      await prisma.market.update({
-        where: { id: input.marketId },
-        data: { status: 'OPEN' },
+
+      const OPEN_REWARD = 50
+
+      await prisma.$transaction(async (tx) => {
+        await tx.market.update({
+          where: { id: input.marketId },
+          data: { status: 'OPEN' },
+        })
+
+        if (market.creatorId) {
+          await tx.balance.upsert({
+            where: { userId: market.creatorId },
+            create: { userId: market.creatorId, balance: OPEN_REWARD },
+            update: { balance: { increment: OPEN_REWARD } },
+          })
+          await tx.transaction.create({
+            data: {
+              userId: market.creatorId,
+              amount: OPEN_REWARD,
+              type: 'REWARD',
+              message: `Your market "${market.title}" was approved! Here's ${OPEN_REWARD} tokens`,
+            },
+          })
+        }
       })
+
       return { success: true }
     }),
 

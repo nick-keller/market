@@ -103,6 +103,38 @@ export const tradeRouter = createTRPCRouter({
           }),
         ])
 
+        if (market.creatorId && !market.authorPositionRewardGranted) {
+          const POSITION_REWARD = 100
+          const POSITION_THRESHOLD = 5
+
+          const positionCount = await tx.position.count({
+            where: {
+              marketId: input.marketId,
+              OR: [{ yesShares: { gt: 0 } }, { noShares: { gt: 0 } }],
+            },
+          })
+
+          if (positionCount >= POSITION_THRESHOLD) {
+            await tx.market.update({
+              where: { id: input.marketId },
+              data: { authorPositionRewardGranted: true },
+            })
+            await tx.balance.upsert({
+              where: { userId: market.creatorId },
+              create: { userId: market.creatorId, balance: POSITION_REWARD },
+              update: { balance: { increment: POSITION_REWARD } },
+            })
+            await tx.transaction.create({
+              data: {
+                userId: market.creatorId,
+                amount: POSITION_REWARD,
+                type: 'REWARD',
+                message: `${POSITION_THRESHOLD} users are now trading on your market "${market.title}"! Here's ${POSITION_REWARD} tokens`,
+              },
+            })
+          }
+        }
+
         return {
           trade,
           cost: tradeCost,

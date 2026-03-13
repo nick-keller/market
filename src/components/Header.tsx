@@ -4,6 +4,7 @@ import { authClient } from '#/lib/auth-client'
 import { useTRPC } from '#/integrations/trpc/react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import NotificationMenu from '@/components/NotificationMenu'
 
 export default function Header() {
   const trpc = useTRPC()
@@ -39,6 +40,7 @@ export default function Header() {
                   {profileData.balance.toFixed(2)} <span className="text-xs font-normal text-muted-foreground">tokens</span>
                 </span>
               )}
+              <NotificationMenu />
               <Button variant="ghost" size="sm" asChild>
                 <Link
                   to="/users/$userId"
