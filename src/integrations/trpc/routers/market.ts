@@ -4,6 +4,7 @@ import { createTRPCRouter, authedProcedure, roleProcedure } from '../init'
 import { prisma } from '#/db'
 import type { Prisma } from '#/generated/prisma/client'
 import { hasRole } from '#/lib/roles'
+import { priceYes } from '#/lib/lmsr'
 import { Role } from '#/generated/prisma/enums'
 
 const INITIAL_BALANCE = 1000
@@ -23,6 +24,7 @@ export const marketRouter = createTRPCRouter({
       z.object({
         status: z.enum(['PENDING', 'OPEN', 'CLOSED', 'RESOLVED']).optional(),
         search: z.string().optional(),
+        sort: z.enum(['recent', 'oldest', 'positions', 'volume', 'extreme']).default('recent'),
         cursor: z.string().optional(),
         limit: z.number().min(1).max(50).default(20),
       }),
@@ -64,16 +66,45 @@ export const marketRouter = createTRPCRouter({
         where.title = { contains: input.search, mode: 'insensitive' }
       }
 
+      const isExtremeSort = input.sort === 'extreme'
+
+      const orderBy: Prisma.MarketOrderByWithRelationInput =
+        input.sort === 'oldest'
+          ? { createdAt: 'asc' }
+          : input.sort === 'positions'
+            ? { positions: { _count: 'desc' } }
+            : input.sort === 'volume'
+              ? { state: { volume: 'desc' } }
+              : { createdAt: 'desc' }
+
       const markets = await prisma.market.findMany({
         where,
-        include: { state: true, creator: { select: { id: true, name: true } } },
-        orderBy: { createdAt: 'desc' },
-        take: input.limit + 1,
-        ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+        include: { state: true, creator: { select: { id: true, name: true } }, _count: { select: { positions: true } } },
+        ...(isExtremeSort ? {} : { orderBy }),
+        ...(!isExtremeSort
+          ? {
+              take: input.limit + 1,
+              ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+            }
+          : {}),
       })
 
+      if (isExtremeSort) {
+        markets.sort((a, b) => {
+          const pA = a.state
+            ? Math.abs(priceYes(Number(a.state.qYes), Number(a.state.qNo), Number(a.state.liquidityB)) - 0.5)
+            : 0
+          const pB = b.state
+            ? Math.abs(priceYes(Number(b.state.qYes), Number(b.state.qNo), Number(b.state.liquidityB)) - 0.5)
+            : 0
+          return pB - pA
+        })
+      }
+
       let nextCursor: string | undefined
-      if (markets.length > input.limit) {
+      if (isExtremeSort) {
+        markets.splice(input.limit)
+      } else if (markets.length > input.limit) {
         const next = markets.pop()!
         nextCursor = next.id
       }

@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { useSuspenseQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTRPC } from '#/integrations/trpc/react'
 import { authClient } from '#/lib/auth-client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -28,6 +29,34 @@ export const Route = createFileRoute('/users/')({
   component: UsersPage,
 })
 
+function LeaderboardRowSkeleton() {
+  return (
+    <TableRow>
+      <TableCell>
+        <Skeleton className="h-4 w-5" />
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-8 w-8 rounded-full" />
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-3 w-36" />
+          </div>
+        </div>
+      </TableCell>
+      <TableCell className="text-right">
+        <Skeleton className="ml-auto h-4 w-16" />
+      </TableCell>
+      <TableCell className="text-right">
+        <Skeleton className="ml-auto h-4 w-8" />
+      </TableCell>
+      <TableCell className="text-right">
+        <Skeleton className="ml-auto h-4 w-14" />
+      </TableCell>
+    </TableRow>
+  )
+}
+
 function UsersPage() {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
@@ -38,7 +67,7 @@ function UsersPage() {
   })
   const canManageUsers = me?.roles.includes('MANAGE_USERS') ?? false
 
-  const { data: users } = useSuspenseQuery(
+  const { data: users, isPending } = useQuery(
     trpc.user.list.queryOptions(),
   )
   const { data: adminUsers } = useQuery({
@@ -95,45 +124,50 @@ function UsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user, i) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-mono text-sm text-muted-foreground">
-                    {i + 1}
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      to="/users/$userId"
-                      params={{ userId: user.id }}
-                      className="flex items-center gap-3 font-medium hover:underline"
-                    >
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-accent text-xs font-semibold text-primary">
-                          {user.name?.charAt(0).toUpperCase() || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="leading-tight">{user.name}</p>
-                        <p className="text-xs text-muted-foreground">{user.email}</p>
-                      </div>
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-sm font-semibold">
-                    {user.balance.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-sm">
-                    {user.positionCount}
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-sm">
-                    {user.totalShares.toFixed(2)}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {users.length === 0 && (
+              {isPending ? (
+                Array.from({ length: 8 }).map((_, i) => (
+                  <LeaderboardRowSkeleton key={i} />
+                ))
+              ) : users!.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                     No users found.
                   </TableCell>
                 </TableRow>
+              ) : (
+                users!.map((user, i) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-mono text-sm text-muted-foreground">
+                      {i + 1}
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        to="/users/$userId"
+                        params={{ userId: user.id }}
+                        className="flex items-center gap-3 font-medium hover:underline"
+                      >
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className="bg-accent text-xs font-semibold text-primary">
+                            {user.name?.charAt(0).toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="leading-tight">{user.name}</p>
+                          <p className="text-xs text-muted-foreground">{user.email}</p>
+                        </div>
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm font-semibold">
+                      {user.balance.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {user.positionCount}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {user.totalShares.toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>

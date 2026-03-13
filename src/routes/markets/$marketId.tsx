@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useSuspenseQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTRPC } from '#/integrations/trpc/react'
 import { authClient } from '#/lib/auth-client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Skeleton } from '@/components/ui/skeleton'
 import PriceBar from '@/components/PriceBar'
 import PriceChart from '@/components/PriceChart'
 import TradePanel from '@/components/TradePanel'
@@ -26,25 +27,85 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'outline' | 'destr
   RESOLVED: 'outline',
 }
 
+function MarketDetailSkeleton() {
+  return (
+    <main className="mx-auto max-w-6xl px-4 pb-12 pt-8">
+      <div className="mb-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <Skeleton className="mb-2 h-5 w-16 rounded-full" />
+            <Skeleton className="h-8 w-2/3" />
+            <Skeleton className="mt-2 h-4 w-full max-w-md" />
+            <div className="mt-3 flex gap-3">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <Card>
+          <CardContent className="p-5">
+            <div className="mb-4 flex items-baseline justify-between">
+              <Skeleton className="h-9 w-20" />
+              <Skeleton className="h-9 w-20" />
+            </div>
+            <Skeleton className="h-3 w-full rounded-full" />
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
+            <CardContent className="p-5">
+              <Skeleton className="mb-4 h-4 w-28" />
+              <Skeleton className="h-48 w-full" />
+            </CardContent>
+          </Card>
+          <div>
+            <Skeleton className="mb-4 h-9 w-64 rounded-md" />
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        <div>
+          <Card>
+            <CardContent className="p-5 space-y-4">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-9 w-full rounded-md" />
+              <Skeleton className="h-9 w-full rounded-md" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </main>
+  )
+}
+
 function MarketDetail() {
   const { marketId } = Route.useParams()
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const { data: session } = authClient.useSession()
 
-  const { data: market } = useSuspenseQuery(
+  const { data: market, isPending: marketPending } = useQuery(
     trpc.markets.get.queryOptions({ id: marketId }),
   )
 
-  const { data: trades } = useSuspenseQuery(
+  const { data: trades, isPending: tradesPending } = useQuery(
     trpc.trade.history.queryOptions({ marketId, limit: 200 }),
   )
 
-  const state = market.state!
-  const qYes = Number(state.qYes)
-  const qNo = Number(state.qNo)
-  const b = Number(state.liquidityB)
-  const yesP = priceYes(qYes, qNo, b)
+  const userId = session?.user?.id
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: trpc.markets.get.queryKey({ id: marketId }) })
@@ -79,9 +140,6 @@ function MarketDetail() {
     }),
   )
 
-  const userId = session?.user?.id
-  const myPosition = market.positions.find((p) => p.userId === userId)
-
   const { data: profileData } = useQuery({
     ...trpc.user.profile.queryOptions({ userId: userId! }),
     enabled: !!userId,
@@ -93,6 +151,18 @@ function MarketDetail() {
   const userBalance = profileData?.balance ?? 1000
   const canValidateMarkets = me?.roles?.includes('VALIDATE_MARKETS') ?? false
   const canResolveMarkets = me?.roles?.includes('RESOLVE_MARKETS') ?? false
+
+  if (marketPending || tradesPending || !market || !trades) {
+    return <MarketDetailSkeleton />
+  }
+
+  const state = market.state!
+  const qYes = Number(state.qYes)
+  const qNo = Number(state.qNo)
+  const b = Number(state.liquidityB)
+  const yesP = priceYes(qYes, qNo, b)
+
+  const myPosition = market.positions.find((p) => p.userId === userId)
 
   const handleBuy = (outcome: Outcome, shares: number) => {
     buyMutation.mutate({ marketId, outcome, shares })

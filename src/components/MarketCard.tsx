@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import PriceBar from './PriceBar'
 import { priceYes } from '#/lib/lmsr'
+import { BitcoinIcon, CalendarIcon, UserIcon } from 'lucide-react'
 
 interface MarketCardProps {
   market: {
@@ -19,10 +20,14 @@ interface MarketCardProps {
     } | null
     creator: { id: string; name: string } | null
     totalInvested?: number
+    _count?: { positions: number }
   }
 }
 
-const statusVariant: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
+const statusVariant: Record<
+  string,
+  'default' | 'secondary' | 'outline' | 'destructive'
+> = {
   PENDING: 'secondary',
   OPEN: 'default',
   CLOSED: 'secondary',
@@ -36,7 +41,11 @@ export default function MarketCard({ market }: MarketCardProps) {
     : 0.5
 
   return (
-    <Link to="/markets/$marketId" params={{ marketId: market.id }} className="no-underline">
+    <Link
+      to="/markets/$marketId"
+      params={{ marketId: market.id }}
+      className="no-underline"
+    >
       <Card
         className={`h-full transition-shadow hover:shadow-md ${market.status === 'PENDING' ? 'bg-yellow-50 dark:bg-yellow-950/30' : ''}`}
       >
@@ -45,22 +54,38 @@ export default function MarketCard({ market }: MarketCardProps) {
             <h3 className="line-clamp-2 text-sm font-semibold leading-snug">
               {market.title}
             </h3>
-            <Badge variant={statusVariant[market.status] ?? 'secondary'} className="shrink-0 text-[10px]">
+            <Badge
+              variant={statusVariant[market.status] ?? 'secondary'}
+              className="shrink-0 text-[10px]"
+            >
               {market.status}
             </Badge>
           </div>
 
           <PriceBar yesPrice={yesP} size="sm" />
 
-          <div className="mt-auto flex items-center justify-end text-xs text-muted-foreground">
-            <span>Total invested: {(market.totalInvested ?? (state ? Number(state.volume) : 0)).toFixed(2)}</span>
+          <div className="flex flex-col mt-auto">
+            <div className="flex content-between justify-between text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <BitcoinIcon size={11} />{' '}
+                {(
+                  market.totalInvested ?? (state ? Number(state.volume) : 0)
+                ).toFixed(2)}
+              </span>
+              <span className="flex items-center gap-1">
+                <CalendarIcon size={11} />{' '}
+                {market.closeTime
+                  ? new Date(market.closeTime).toLocaleDateString()
+                  : '-'}
+              </span>
+            </div>
+            <div className="flex content-between justify-between text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <UserIcon size={11} />{' '}
+                {market._count != null ? market._count.positions : 0}
+              </span>
+            </div>
           </div>
-
-          {market.closeTime && (
-            <p className="text-[11px] text-muted-foreground">
-              Closes {new Date(market.closeTime).toLocaleDateString()}
-            </p>
-          )}
         </CardContent>
       </Card>
     </Link>

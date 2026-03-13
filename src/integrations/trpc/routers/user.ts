@@ -172,7 +172,6 @@ export const userRouter = createTRPCRouter({
           const payout = winningShares
           const totalCost = agg.totalCost
           const pnl = payout - totalCost
-          const netWon = winningShares > losingShares
           return {
             marketId: market.id,
             marketTitle: market.title,
@@ -180,7 +179,7 @@ export const userRouter = createTRPCRouter({
             payout,
             totalCost,
             pnl,
-            netWon,
+            netWon: pnl > 0,
             resolvedAt: market.resolvedAt,
           }
         })
