@@ -18,6 +18,7 @@ import {
 import { Trophy, TrendingDown } from 'lucide-react'
 import PositionTable from '@/components/PositionTable'
 import TradeHistory from '@/components/TradeHistory'
+import AchievementList from '@/components/AchievementList'
 
 export const Route = createFileRoute('/users/$userId')({
   component: UserProfile,
@@ -76,6 +77,10 @@ function UserProfile() {
 
   const { data: stats, isPending: statsPending } = useQuery(
     trpc.user.stats.queryOptions({ userId }),
+  )
+
+  const { data: achievements, isPending: achievementsPending } = useQuery(
+    trpc.achievements.byUser.queryOptions({ userId }),
   )
 
   const wins = results?.filter((r) => r.netWon) ?? []
@@ -176,6 +181,9 @@ function UserProfile() {
           <TabsTrigger value="results">
             Results {results ? `(${results.length})` : ''}
           </TabsTrigger>
+          <TabsTrigger value="achievements">
+            Achievements {achievements ? `(${achievements.length})` : ''}
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="positions" className="mt-4">
           {positionsPending || !positions ? (
@@ -239,6 +247,13 @@ function UserProfile() {
                 </CardContent>
               </Card>
             </div>
+          )}
+        </TabsContent>
+        <TabsContent value="achievements" className="mt-4">
+          {achievementsPending || !achievements ? (
+            <TabContentSkeleton />
+          ) : (
+            <AchievementList achievements={achievements} />
           )}
         </TabsContent>
       </Tabs>

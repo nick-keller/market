@@ -77,3 +77,8 @@ export type Transaction = Prisma.TransactionModel
  * 
  */
 export type UserMarketResult = Prisma.UserMarketResultModel
+/**
+ * Model UserAchievement
+ * 
+ */
+export type UserAchievement = Prisma.UserAchievementModel

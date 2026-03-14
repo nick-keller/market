@@ -3,6 +3,7 @@ import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, authedProcedure } from '../init'
 import { prisma } from '#/db'
 import { costForShares, priceYes, priceNo } from '#/lib/lmsr'
+import { checkAfterBuy, checkAfterSell } from '#/lib/achievement-checker'
 
 const INITIAL_BALANCE = 1000
 
@@ -16,7 +17,7 @@ export const tradeRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx) => {
         const market = await tx.market.findUniqueOrThrow({
           where: { id: input.marketId },
           include: { state: true },
@@ -140,8 +141,19 @@ export const tradeRouter = createTRPCRouter({
           cost: tradeCost,
           newPriceYes: priceYes(newQYes, newQNo, b),
           newPriceNo: priceNo(newQYes, newQNo, b),
+          _marketCreatorId: market.creatorId,
+          _marketId: input.marketId,
         }
       })
+
+      checkAfterBuy(ctx.user.id, result._marketId, result._marketCreatorId)
+
+      return {
+        trade: result.trade,
+        cost: result.cost,
+        newPriceYes: result.newPriceYes,
+        newPriceNo: result.newPriceNo,
+      }
     }),
 
   sell: authedProcedure
@@ -153,7 +165,7 @@ export const tradeRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx) => {
         const market = await tx.market.findUniqueOrThrow({
           where: { id: input.marketId },
           include: { state: true },
@@ -239,6 +251,10 @@ export const tradeRouter = createTRPCRouter({
           newPriceNo: priceNo(newQYes, newQNo, b),
         }
       })
+
+      checkAfterSell(ctx.user.id)
+
+      return result
     }),
 
   history: authedProcedure

@@ -33,6 +33,7 @@ export type MarketMinAggregateOutputType = {
   closeTime: Date | null
   resolvedAt: Date | null
   winningOutcome: $Enums.OutcomeType | null
+  authorPositionRewardGranted: boolean | null
   createdAt: Date | null
 }
 
@@ -45,6 +46,7 @@ export type MarketMaxAggregateOutputType = {
   closeTime: Date | null
   resolvedAt: Date | null
   winningOutcome: $Enums.OutcomeType | null
+  authorPositionRewardGranted: boolean | null
   createdAt: Date | null
 }
 
@@ -57,6 +59,7 @@ export type MarketCountAggregateOutputType = {
   closeTime: number
   resolvedAt: number
   winningOutcome: number
+  authorPositionRewardGranted: number
   createdAt: number
   _all: number
 }
@@ -71,6 +74,7 @@ export type MarketMinAggregateInputType = {
   closeTime?: true
   resolvedAt?: true
   winningOutcome?: true
+  authorPositionRewardGranted?: true
   createdAt?: true
 }
 
@@ -83,6 +87,7 @@ export type MarketMaxAggregateInputType = {
   closeTime?: true
   resolvedAt?: true
   winningOutcome?: true
+  authorPositionRewardGranted?: true
   createdAt?: true
 }
 
@@ -95,6 +100,7 @@ export type MarketCountAggregateInputType = {
   closeTime?: true
   resolvedAt?: true
   winningOutcome?: true
+  authorPositionRewardGranted?: true
   createdAt?: true
   _all?: true
 }
@@ -180,6 +186,7 @@ export type MarketGroupByOutputType = {
   closeTime: Date | null
   resolvedAt: Date | null
   winningOutcome: $Enums.OutcomeType | null
+  authorPositionRewardGranted: boolean
   createdAt: Date
   _count: MarketCountAggregateOutputType | null
   _min: MarketMinAggregateOutputType | null
@@ -213,6 +220,7 @@ export type MarketWhereInput = {
   closeTime?: Prisma.DateTimeNullableFilter<"Market"> | Date | string | null
   resolvedAt?: Prisma.DateTimeNullableFilter<"Market"> | Date | string | null
   winningOutcome?: Prisma.EnumOutcomeTypeNullableFilter<"Market"> | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFilter<"Market"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Market"> | Date | string
   creator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   state?: Prisma.XOR<Prisma.MarketStateNullableScalarRelationFilter, Prisma.MarketStateWhereInput> | null
@@ -230,6 +238,7 @@ export type MarketOrderByWithRelationInput = {
   closeTime?: Prisma.SortOrderInput | Prisma.SortOrder
   resolvedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   winningOutcome?: Prisma.SortOrderInput | Prisma.SortOrder
+  authorPositionRewardGranted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   creator?: Prisma.UserOrderByWithRelationInput
   state?: Prisma.MarketStateOrderByWithRelationInput
@@ -250,6 +259,7 @@ export type MarketWhereUniqueInput = Prisma.AtLeast<{
   closeTime?: Prisma.DateTimeNullableFilter<"Market"> | Date | string | null
   resolvedAt?: Prisma.DateTimeNullableFilter<"Market"> | Date | string | null
   winningOutcome?: Prisma.EnumOutcomeTypeNullableFilter<"Market"> | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFilter<"Market"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Market"> | Date | string
   creator?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   state?: Prisma.XOR<Prisma.MarketStateNullableScalarRelationFilter, Prisma.MarketStateWhereInput> | null
@@ -267,6 +277,7 @@ export type MarketOrderByWithAggregationInput = {
   closeTime?: Prisma.SortOrderInput | Prisma.SortOrder
   resolvedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   winningOutcome?: Prisma.SortOrderInput | Prisma.SortOrder
+  authorPositionRewardGranted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.MarketCountOrderByAggregateInput
   _max?: Prisma.MarketMaxOrderByAggregateInput
@@ -285,6 +296,7 @@ export type MarketScalarWhereWithAggregatesInput = {
   closeTime?: Prisma.DateTimeNullableWithAggregatesFilter<"Market"> | Date | string | null
   resolvedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Market"> | Date | string | null
   winningOutcome?: Prisma.EnumOutcomeTypeNullableWithAggregatesFilter<"Market"> | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolWithAggregatesFilter<"Market"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Market"> | Date | string
 }
 
@@ -296,6 +308,7 @@ export type MarketCreateInput = {
   closeTime?: Date | string | null
   resolvedAt?: Date | string | null
   winningOutcome?: $Enums.OutcomeType | null
+  authorPositionRewardGranted?: boolean
   createdAt?: Date | string
   creator?: Prisma.UserCreateNestedOneWithoutMarketsInput
   state?: Prisma.MarketStateCreateNestedOneWithoutMarketInput
@@ -313,6 +326,7 @@ export type MarketUncheckedCreateInput = {
   closeTime?: Date | string | null
   resolvedAt?: Date | string | null
   winningOutcome?: $Enums.OutcomeType | null
+  authorPositionRewardGranted?: boolean
   createdAt?: Date | string
   state?: Prisma.MarketStateUncheckedCreateNestedOneWithoutMarketInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutMarketInput
@@ -328,6 +342,7 @@ export type MarketUpdateInput = {
   closeTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   winningOutcome?: Prisma.NullableEnumOutcomeTypeFieldUpdateOperationsInput | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   creator?: Prisma.UserUpdateOneWithoutMarketsNestedInput
   state?: Prisma.MarketStateUpdateOneWithoutMarketNestedInput
@@ -345,6 +360,7 @@ export type MarketUncheckedUpdateInput = {
   closeTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   winningOutcome?: Prisma.NullableEnumOutcomeTypeFieldUpdateOperationsInput | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   state?: Prisma.MarketStateUncheckedUpdateOneWithoutMarketNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutMarketNestedInput
@@ -361,6 +377,7 @@ export type MarketCreateManyInput = {
   closeTime?: Date | string | null
   resolvedAt?: Date | string | null
   winningOutcome?: $Enums.OutcomeType | null
+  authorPositionRewardGranted?: boolean
   createdAt?: Date | string
 }
 
@@ -372,6 +389,7 @@ export type MarketUpdateManyMutationInput = {
   closeTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   winningOutcome?: Prisma.NullableEnumOutcomeTypeFieldUpdateOperationsInput | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -384,6 +402,7 @@ export type MarketUncheckedUpdateManyInput = {
   closeTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   winningOutcome?: Prisma.NullableEnumOutcomeTypeFieldUpdateOperationsInput | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -406,6 +425,7 @@ export type MarketCountOrderByAggregateInput = {
   closeTime?: Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
   winningOutcome?: Prisma.SortOrder
+  authorPositionRewardGranted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -418,6 +438,7 @@ export type MarketMaxOrderByAggregateInput = {
   closeTime?: Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
   winningOutcome?: Prisma.SortOrder
+  authorPositionRewardGranted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -430,6 +451,7 @@ export type MarketMinOrderByAggregateInput = {
   closeTime?: Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
   winningOutcome?: Prisma.SortOrder
+  authorPositionRewardGranted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -559,6 +581,7 @@ export type MarketCreateWithoutCreatorInput = {
   closeTime?: Date | string | null
   resolvedAt?: Date | string | null
   winningOutcome?: $Enums.OutcomeType | null
+  authorPositionRewardGranted?: boolean
   createdAt?: Date | string
   state?: Prisma.MarketStateCreateNestedOneWithoutMarketInput
   positions?: Prisma.PositionCreateNestedManyWithoutMarketInput
@@ -574,6 +597,7 @@ export type MarketUncheckedCreateWithoutCreatorInput = {
   closeTime?: Date | string | null
   resolvedAt?: Date | string | null
   winningOutcome?: $Enums.OutcomeType | null
+  authorPositionRewardGranted?: boolean
   createdAt?: Date | string
   state?: Prisma.MarketStateUncheckedCreateNestedOneWithoutMarketInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutMarketInput
@@ -619,6 +643,7 @@ export type MarketScalarWhereInput = {
   closeTime?: Prisma.DateTimeNullableFilter<"Market"> | Date | string | null
   resolvedAt?: Prisma.DateTimeNullableFilter<"Market"> | Date | string | null
   winningOutcome?: Prisma.EnumOutcomeTypeNullableFilter<"Market"> | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFilter<"Market"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Market"> | Date | string
 }
 
@@ -630,6 +655,7 @@ export type MarketCreateWithoutStateInput = {
   closeTime?: Date | string | null
   resolvedAt?: Date | string | null
   winningOutcome?: $Enums.OutcomeType | null
+  authorPositionRewardGranted?: boolean
   createdAt?: Date | string
   creator?: Prisma.UserCreateNestedOneWithoutMarketsInput
   positions?: Prisma.PositionCreateNestedManyWithoutMarketInput
@@ -646,6 +672,7 @@ export type MarketUncheckedCreateWithoutStateInput = {
   closeTime?: Date | string | null
   resolvedAt?: Date | string | null
   winningOutcome?: $Enums.OutcomeType | null
+  authorPositionRewardGranted?: boolean
   createdAt?: Date | string
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutMarketInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutMarketInput
@@ -676,6 +703,7 @@ export type MarketUpdateWithoutStateInput = {
   closeTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   winningOutcome?: Prisma.NullableEnumOutcomeTypeFieldUpdateOperationsInput | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   creator?: Prisma.UserUpdateOneWithoutMarketsNestedInput
   positions?: Prisma.PositionUpdateManyWithoutMarketNestedInput
@@ -692,6 +720,7 @@ export type MarketUncheckedUpdateWithoutStateInput = {
   closeTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   winningOutcome?: Prisma.NullableEnumOutcomeTypeFieldUpdateOperationsInput | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   positions?: Prisma.PositionUncheckedUpdateManyWithoutMarketNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutMarketNestedInput
@@ -706,6 +735,7 @@ export type MarketCreateWithoutPositionsInput = {
   closeTime?: Date | string | null
   resolvedAt?: Date | string | null
   winningOutcome?: $Enums.OutcomeType | null
+  authorPositionRewardGranted?: boolean
   createdAt?: Date | string
   creator?: Prisma.UserCreateNestedOneWithoutMarketsInput
   state?: Prisma.MarketStateCreateNestedOneWithoutMarketInput
@@ -722,6 +752,7 @@ export type MarketUncheckedCreateWithoutPositionsInput = {
   closeTime?: Date | string | null
   resolvedAt?: Date | string | null
   winningOutcome?: $Enums.OutcomeType | null
+  authorPositionRewardGranted?: boolean
   createdAt?: Date | string
   state?: Prisma.MarketStateUncheckedCreateNestedOneWithoutMarketInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutMarketInput
@@ -752,6 +783,7 @@ export type MarketUpdateWithoutPositionsInput = {
   closeTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   winningOutcome?: Prisma.NullableEnumOutcomeTypeFieldUpdateOperationsInput | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   creator?: Prisma.UserUpdateOneWithoutMarketsNestedInput
   state?: Prisma.MarketStateUpdateOneWithoutMarketNestedInput
@@ -768,6 +800,7 @@ export type MarketUncheckedUpdateWithoutPositionsInput = {
   closeTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   winningOutcome?: Prisma.NullableEnumOutcomeTypeFieldUpdateOperationsInput | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   state?: Prisma.MarketStateUncheckedUpdateOneWithoutMarketNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutMarketNestedInput
@@ -782,6 +815,7 @@ export type MarketCreateWithoutTradesInput = {
   closeTime?: Date | string | null
   resolvedAt?: Date | string | null
   winningOutcome?: $Enums.OutcomeType | null
+  authorPositionRewardGranted?: boolean
   createdAt?: Date | string
   creator?: Prisma.UserCreateNestedOneWithoutMarketsInput
   state?: Prisma.MarketStateCreateNestedOneWithoutMarketInput
@@ -798,6 +832,7 @@ export type MarketUncheckedCreateWithoutTradesInput = {
   closeTime?: Date | string | null
   resolvedAt?: Date | string | null
   winningOutcome?: $Enums.OutcomeType | null
+  authorPositionRewardGranted?: boolean
   createdAt?: Date | string
   state?: Prisma.MarketStateUncheckedCreateNestedOneWithoutMarketInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutMarketInput
@@ -828,6 +863,7 @@ export type MarketUpdateWithoutTradesInput = {
   closeTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   winningOutcome?: Prisma.NullableEnumOutcomeTypeFieldUpdateOperationsInput | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   creator?: Prisma.UserUpdateOneWithoutMarketsNestedInput
   state?: Prisma.MarketStateUpdateOneWithoutMarketNestedInput
@@ -844,6 +880,7 @@ export type MarketUncheckedUpdateWithoutTradesInput = {
   closeTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   winningOutcome?: Prisma.NullableEnumOutcomeTypeFieldUpdateOperationsInput | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   state?: Prisma.MarketStateUncheckedUpdateOneWithoutMarketNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutMarketNestedInput
@@ -858,6 +895,7 @@ export type MarketCreateWithoutUserMarketResultsInput = {
   closeTime?: Date | string | null
   resolvedAt?: Date | string | null
   winningOutcome?: $Enums.OutcomeType | null
+  authorPositionRewardGranted?: boolean
   createdAt?: Date | string
   creator?: Prisma.UserCreateNestedOneWithoutMarketsInput
   state?: Prisma.MarketStateCreateNestedOneWithoutMarketInput
@@ -874,6 +912,7 @@ export type MarketUncheckedCreateWithoutUserMarketResultsInput = {
   closeTime?: Date | string | null
   resolvedAt?: Date | string | null
   winningOutcome?: $Enums.OutcomeType | null
+  authorPositionRewardGranted?: boolean
   createdAt?: Date | string
   state?: Prisma.MarketStateUncheckedCreateNestedOneWithoutMarketInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutMarketInput
@@ -904,6 +943,7 @@ export type MarketUpdateWithoutUserMarketResultsInput = {
   closeTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   winningOutcome?: Prisma.NullableEnumOutcomeTypeFieldUpdateOperationsInput | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   creator?: Prisma.UserUpdateOneWithoutMarketsNestedInput
   state?: Prisma.MarketStateUpdateOneWithoutMarketNestedInput
@@ -920,6 +960,7 @@ export type MarketUncheckedUpdateWithoutUserMarketResultsInput = {
   closeTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   winningOutcome?: Prisma.NullableEnumOutcomeTypeFieldUpdateOperationsInput | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   state?: Prisma.MarketStateUncheckedUpdateOneWithoutMarketNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutMarketNestedInput
@@ -934,6 +975,7 @@ export type MarketCreateManyCreatorInput = {
   closeTime?: Date | string | null
   resolvedAt?: Date | string | null
   winningOutcome?: $Enums.OutcomeType | null
+  authorPositionRewardGranted?: boolean
   createdAt?: Date | string
 }
 
@@ -945,6 +987,7 @@ export type MarketUpdateWithoutCreatorInput = {
   closeTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   winningOutcome?: Prisma.NullableEnumOutcomeTypeFieldUpdateOperationsInput | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   state?: Prisma.MarketStateUpdateOneWithoutMarketNestedInput
   positions?: Prisma.PositionUpdateManyWithoutMarketNestedInput
@@ -960,6 +1003,7 @@ export type MarketUncheckedUpdateWithoutCreatorInput = {
   closeTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   winningOutcome?: Prisma.NullableEnumOutcomeTypeFieldUpdateOperationsInput | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   state?: Prisma.MarketStateUncheckedUpdateOneWithoutMarketNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutMarketNestedInput
@@ -975,6 +1019,7 @@ export type MarketUncheckedUpdateManyWithoutCreatorInput = {
   closeTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   winningOutcome?: Prisma.NullableEnumOutcomeTypeFieldUpdateOperationsInput | $Enums.OutcomeType | null
+  authorPositionRewardGranted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1036,6 +1081,7 @@ export type MarketSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   closeTime?: boolean
   resolvedAt?: boolean
   winningOutcome?: boolean
+  authorPositionRewardGranted?: boolean
   createdAt?: boolean
   creator?: boolean | Prisma.Market$creatorArgs<ExtArgs>
   state?: boolean | Prisma.Market$stateArgs<ExtArgs>
@@ -1054,6 +1100,7 @@ export type MarketSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   closeTime?: boolean
   resolvedAt?: boolean
   winningOutcome?: boolean
+  authorPositionRewardGranted?: boolean
   createdAt?: boolean
   creator?: boolean | Prisma.Market$creatorArgs<ExtArgs>
 }, ExtArgs["result"]["market"]>
@@ -1067,6 +1114,7 @@ export type MarketSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   closeTime?: boolean
   resolvedAt?: boolean
   winningOutcome?: boolean
+  authorPositionRewardGranted?: boolean
   createdAt?: boolean
   creator?: boolean | Prisma.Market$creatorArgs<ExtArgs>
 }, ExtArgs["result"]["market"]>
@@ -1080,10 +1128,11 @@ export type MarketSelectScalar = {
   closeTime?: boolean
   resolvedAt?: boolean
   winningOutcome?: boolean
+  authorPositionRewardGranted?: boolean
   createdAt?: boolean
 }
 
-export type MarketOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "creatorId" | "status" | "closeTime" | "resolvedAt" | "winningOutcome" | "createdAt", ExtArgs["result"]["market"]>
+export type MarketOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "creatorId" | "status" | "closeTime" | "resolvedAt" | "winningOutcome" | "authorPositionRewardGranted" | "createdAt", ExtArgs["result"]["market"]>
 export type MarketInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   creator?: boolean | Prisma.Market$creatorArgs<ExtArgs>
   state?: boolean | Prisma.Market$stateArgs<ExtArgs>
@@ -1117,6 +1166,7 @@ export type $MarketPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     closeTime: Date | null
     resolvedAt: Date | null
     winningOutcome: $Enums.OutcomeType | null
+    authorPositionRewardGranted: boolean
     createdAt: Date
   }, ExtArgs["result"]["market"]>
   composites: {}
@@ -1554,6 +1604,7 @@ export interface MarketFieldRefs {
   readonly closeTime: Prisma.FieldRef<"Market", 'DateTime'>
   readonly resolvedAt: Prisma.FieldRef<"Market", 'DateTime'>
   readonly winningOutcome: Prisma.FieldRef<"Market", 'OutcomeType'>
+  readonly authorPositionRewardGranted: Prisma.FieldRef<"Market", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Market", 'DateTime'>
 }
     

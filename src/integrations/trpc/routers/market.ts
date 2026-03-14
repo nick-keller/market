@@ -6,6 +6,7 @@ import type { Prisma } from '#/generated/prisma/client'
 import { hasRole } from '#/lib/roles'
 import { priceYes } from '#/lib/lmsr'
 import { Role } from '#/generated/prisma/enums'
+import { checkAfterMarketCreate, checkAfterResolve } from '#/lib/achievement-checker'
 
 const INITIAL_BALANCE = 1000
 const DEFAULT_LIQUIDITY = 100
@@ -207,6 +208,8 @@ export const marketRouter = createTRPCRouter({
         include: { state: true },
       })
 
+      checkAfterMarketCreate(ctx.user.id)
+
       return market
     }),
 
@@ -370,6 +373,8 @@ export const marketRouter = createTRPCRouter({
           data: { yesShares: 0, noShares: 0 },
         })
       })
+
+      checkAfterResolve(input.marketId)
 
       return { success: true }
     }),

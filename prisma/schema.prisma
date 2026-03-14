@@ -24,6 +24,7 @@ model User {
   trades             Trade[]
   transactions       Transaction[]
   userMarketResults  UserMarketResult[]
+  achievements       UserAchievement[]
 
   @@unique([email])
   @@map("user")
@@ -227,4 +228,19 @@ model UserMarketResult {
 
   @@id([userId, marketId])
   @@map("user_market_results")
+}
+
+model UserAchievement {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  achievementId String   @map("achievement_id")
+  tier          Int      @default(0)
+  reward        Decimal  @db.Decimal(20, 8)
+  achievedAt    DateTime @default(now()) @map("achieved_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId, tier])
+  @@index([userId])
+  @@map("user_achievements")
 }
