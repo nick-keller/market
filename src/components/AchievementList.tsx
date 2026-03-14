@@ -15,6 +15,27 @@ import {
   Crown,
   Skull,
   Gem,
+  Flame,
+  CloudLightning,
+  CalendarDays,
+  Zap,
+  Hourglass,
+  Diamond,
+  RefreshCcw,
+  Wind,
+  Repeat,
+  Crosshair,
+  PieChart,
+  Rocket,
+  Landmark,
+  Coins,
+  Bomb,
+  Sunrise,
+  Sparkles,
+  Heart,
+  Fish,
+  Award,
+  CircleCheck,
 } from 'lucide-react'
 
 interface UserAchievement {
@@ -36,6 +57,27 @@ const ACHIEVEMENT_ICONS: Record<string, React.ElementType> = {
   biggest_profit_winner: Crown,
   biggest_loss_loser: Skull,
   market_profit: Gem,
+  win_streak: Flame,
+  lose_streak: CloudLightning,
+  active_weeks: CalendarDays,
+  first_trader: Zap,
+  last_trader: Hourglass,
+  diamond_hands: Diamond,
+  contrarian: RefreshCcw,
+  paper_hands: Wind,
+  flip_flopper: Repeat,
+  sniper: Crosshair,
+  diversified: PieChart,
+  high_roller: Rocket,
+  token_hoarder: Landmark,
+  penny_pincher: Coins,
+  all_in: Bomb,
+  comeback: Sunrise,
+  trendsetter: Sparkles,
+  popular_creator: Heart,
+  whale: Fish,
+  achievement_hunter: Award,
+  perfect_market: CircleCheck,
 }
 
 function AchievementCard({
@@ -57,11 +99,20 @@ function AchievementCard({
     return (
       <Card
         className={cn(
-          'transition-all',
-          allEarned && 'border-amber-400/60 bg-amber-50/30 dark:border-amber-500/40 dark:bg-amber-950/20',
+          'overflow-hidden transition-all pt-0',
+          allEarned &&
+            'border-amber-400/60 bg-amber-50/30 dark:border-amber-500/40 dark:bg-amber-950/20',
           hasAny && !allEarned && 'border-blue-300/50 dark:border-blue-500/30',
         )}
       >
+        <img
+          src={`/achievements/${def.id}.png`}
+          alt={def.illustration}
+          className={cn(
+            'w-full aspect-square object-cover bg-foreground/10',
+            !hasAny && 'grayscale opacity-50',
+          )}
+        />
         <CardContent className="p-4">
           <div className="mb-3 flex items-start gap-3">
             <div
@@ -91,7 +142,7 @@ function AchievementCard({
                   key={t.value}
                   variant={isEarned ? 'default' : 'outline'}
                   className={cn(
-                    'text-xs',
+                    'text-xs whitespace-normal',
                     isEarned
                       ? 'bg-amber-500 hover:bg-amber-500 text-white dark:bg-amber-600'
                       : 'opacity-50',
@@ -115,10 +166,19 @@ function AchievementCard({
   return (
     <Card
       className={cn(
-        'transition-all',
-        achievedEntry && 'border-amber-400/60 bg-amber-50/30 dark:border-amber-500/40 dark:bg-amber-950/20',
+        'overflow-hidden transition-all pt-0',
+        achievedEntry &&
+          'border-amber-400/60 bg-amber-50/30 dark:border-amber-500/40 dark:bg-amber-950/20',
       )}
     >
+      <img
+        src={`/achievements/${def.id}.png`}
+        alt={def.illustration}
+        className={cn(
+          'w-full aspect-square object-cover bg-foreground/10',
+          !achievedEntry && 'grayscale opacity-50',
+        )}
+      />
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           <div
@@ -179,15 +239,15 @@ export default function AchievementList({
     <div className="space-y-4">
       <div className="flex items-baseline gap-4 text-sm text-muted-foreground">
         <span>
-          <strong className="text-foreground">{totalEarned}</strong> achievements
-          unlocked
+          <strong className="text-foreground">{totalEarned}</strong>{' '}
+          achievements unlocked
         </span>
         <span>
           <strong className="text-foreground">{totalRewards.toFixed(0)}</strong>{' '}
           tokens earned
         </span>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {ACHIEVEMENTS.map((def) => (
           <AchievementCard
             key={def.id}

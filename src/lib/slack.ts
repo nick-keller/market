@@ -81,6 +81,74 @@ export function notifyMarketResolved(title: string, outcome: string) {
   postToSlack(msg)
 }
 
+// ── Weekly Allowance ─────────────────────────────────────────
+
+const WEEKLY_ALLOWANCE_MESSAGES = [
+  (count: number, tokens: number) =>
+    `💸 Weekly allowance dropped! *${count} users* just received a total of *${tokens} tokens*. Time to put them to work — go take some positions!`,
+  (count: number, tokens: number) =>
+    `🎁 It's Monday, it's payday! *${tokens} tokens* distributed to *${count}* traders. Markets are waiting — what are you betting on this week?`,
+  (count: number, tokens: number) =>
+    `🏦 The StoikMarket Central Bank has spoken: *${tokens} tokens* airdropped to *${count} users*. Don't just sit on them — go predict something!`,
+  (count: number, tokens: number) =>
+    `💰 Fresh tokens alert! *${count} users* got their weekly cut (*${tokens} tokens* total). The markets are open and your tokens are burning a hole in your pocket.`,
+  (count: number, tokens: number) =>
+    `📬 Monday delivery: *${tokens} tokens* spread across *${count}* accounts. New week, new predictions — what's it going to be?`,
+  (count: number, tokens: number) =>
+    `🌅 Good morning traders! *${count} of you* just got topped up with *${tokens} tokens* total. May your predictions be bold and your returns be legendary.`,
+]
+
+export function notifyWeeklyAllowance(userCount: number, totalTokens: number) {
+  if (userCount === 0) return
+  const msg = pick(WEEKLY_ALLOWANCE_MESSAGES)(userCount, totalTokens)
+  postToSlack(msg)
+}
+
+// ── Weekly Recap ─────────────────────────────────────────────
+
+interface WeeklyRecapData {
+  totalTrades: number
+  totalTokensInvested: number
+  topInvestors: { name: string; tokens: number }[]
+  topWinners: { name: string; pnl: number }[]
+}
+
+function formatMedal(index: number): string {
+  return ['🥇', '🥈', '🥉'][index] ?? `${index + 1}.`
+}
+
+function formatRecapMessage(data: WeeklyRecapData): string {
+  const lines: string[] = [
+    `📊 *Weekly Recap — It's Friday, here's how the week went!*`,
+    ``,
+    `• *${data.totalTrades}* trades made`,
+    `• *${data.totalTokensInvested}* tokens invested`,
+  ]
+
+  if (data.topInvestors.length > 0) {
+    lines.push(``, `*Top Investors:*`)
+    data.topInvestors.forEach((inv, i) => {
+      lines.push(`${formatMedal(i)} ${inv.name} — ${inv.tokens} tokens`)
+    })
+  }
+
+  if (data.topWinners.length > 0) {
+    lines.push(``, `*Top Winners:*`)
+    data.topWinners.forEach((w, i) => {
+      lines.push(`${formatMedal(i)} ${w.name} — ${w.pnl > 0 ? '+' : ''}${w.pnl} PnL`)
+    })
+  }
+
+  lines.push(``, `See you next week — or better yet, go make a prediction now! 🎯`)
+
+  return lines.join('\n')
+}
+
+export function notifyWeeklyRecap(data: WeeklyRecapData) {
+  const msg = formatRecapMessage(data)
+  postToSlack(msg)
+}
+
 // ── Big Position (trade above p80) ────────────────────────────
 
 const BIG_POSITION_MESSAGES = [

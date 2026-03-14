@@ -20,6 +20,8 @@ import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api.trpc.$'
+import { Route as ApiCronWeeklyRecapRouteImport } from './routes/api/cron/weekly-recap'
+import { Route as ApiCronWeeklyAllowanceRouteImport } from './routes/api/cron/weekly-allowance'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -77,6 +79,16 @@ const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
   path: '/api/trpc/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronWeeklyRecapRoute = ApiCronWeeklyRecapRouteImport.update({
+  id: '/api/cron/weekly-recap',
+  path: '/api/cron/weekly-recap',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronWeeklyAllowanceRoute = ApiCronWeeklyAllowanceRouteImport.update({
+  id: '/api/cron/weekly-allowance',
+  path: '/api/cron/weekly-allowance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -95,6 +107,8 @@ export interface FileRoutesByFullPath {
   '/users/$userId': typeof UsersUserIdRoute
   '/users/': typeof UsersIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/cron/weekly-allowance': typeof ApiCronWeeklyAllowanceRoute
+  '/api/cron/weekly-recap': typeof ApiCronWeeklyRecapRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesByTo {
@@ -109,6 +123,8 @@ export interface FileRoutesByTo {
   '/users/$userId': typeof UsersUserIdRoute
   '/users': typeof UsersIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/cron/weekly-allowance': typeof ApiCronWeeklyAllowanceRoute
+  '/api/cron/weekly-recap': typeof ApiCronWeeklyRecapRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesById {
@@ -124,6 +140,8 @@ export interface FileRoutesById {
   '/users/$userId': typeof UsersUserIdRoute
   '/users/': typeof UsersIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/cron/weekly-allowance': typeof ApiCronWeeklyAllowanceRoute
+  '/api/cron/weekly-recap': typeof ApiCronWeeklyRecapRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRouteTypes {
@@ -140,6 +158,8 @@ export interface FileRouteTypes {
     | '/users/$userId'
     | '/users/'
     | '/api/auth/$'
+    | '/api/cron/weekly-allowance'
+    | '/api/cron/weekly-recap'
     | '/api/trpc/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -154,6 +174,8 @@ export interface FileRouteTypes {
     | '/users/$userId'
     | '/users'
     | '/api/auth/$'
+    | '/api/cron/weekly-allowance'
+    | '/api/cron/weekly-recap'
     | '/api/trpc/$'
   id:
     | '__root__'
@@ -168,6 +190,8 @@ export interface FileRouteTypes {
     | '/users/$userId'
     | '/users/'
     | '/api/auth/$'
+    | '/api/cron/weekly-allowance'
+    | '/api/cron/weekly-recap'
     | '/api/trpc/$'
   fileRoutesById: FileRoutesById
 }
@@ -183,6 +207,8 @@ export interface RootRouteChildren {
   UsersUserIdRoute: typeof UsersUserIdRoute
   UsersIndexRoute: typeof UsersIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiCronWeeklyAllowanceRoute: typeof ApiCronWeeklyAllowanceRoute
+  ApiCronWeeklyRecapRoute: typeof ApiCronWeeklyRecapRoute
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
 }
 
@@ -265,6 +291,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTrpcSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/weekly-recap': {
+      id: '/api/cron/weekly-recap'
+      path: '/api/cron/weekly-recap'
+      fullPath: '/api/cron/weekly-recap'
+      preLoaderRoute: typeof ApiCronWeeklyRecapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/weekly-allowance': {
+      id: '/api/cron/weekly-allowance'
+      path: '/api/cron/weekly-allowance'
+      fullPath: '/api/cron/weekly-allowance'
+      preLoaderRoute: typeof ApiCronWeeklyAllowanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -287,6 +327,8 @@ const rootRouteChildren: RootRouteChildren = {
   UsersUserIdRoute: UsersUserIdRoute,
   UsersIndexRoute: UsersIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiCronWeeklyAllowanceRoute: ApiCronWeeklyAllowanceRoute,
+  ApiCronWeeklyRecapRoute: ApiCronWeeklyRecapRoute,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
 }
 export const routeTree = rootRouteImport

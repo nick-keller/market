@@ -148,7 +148,10 @@ export const tradeRouter = createTRPCRouter({
         }
       })
 
-      checkAfterBuy(ctx.user.id, result._marketId, result._marketCreatorId)
+      checkAfterBuy(ctx.user.id, result._marketId, result._marketCreatorId, {
+        tradeCost: result.cost,
+        shares: input.shares,
+      })
       notifyIfBigPosition(
         ctx.user.name,
         input.outcome,
