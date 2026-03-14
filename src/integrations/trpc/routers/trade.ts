@@ -4,6 +4,7 @@ import { createTRPCRouter, authedProcedure } from '../init'
 import { prisma } from '#/db'
 import { costForShares, priceYes, priceNo } from '#/lib/lmsr'
 import { checkAfterBuy, checkAfterSell } from '#/lib/achievement-checker'
+import { notifyIfBigPosition } from '#/lib/slack'
 
 const INITIAL_BALANCE = 1000
 
@@ -143,10 +144,17 @@ export const tradeRouter = createTRPCRouter({
           newPriceNo: priceNo(newQYes, newQNo, b),
           _marketCreatorId: market.creatorId,
           _marketId: input.marketId,
+          _marketTitle: market.title,
         }
       })
 
       checkAfterBuy(ctx.user.id, result._marketId, result._marketCreatorId)
+      notifyIfBigPosition(
+        ctx.user.name,
+        input.outcome,
+        result.cost,
+        result._marketTitle,
+      )
 
       return {
         trade: result.trade,
@@ -249,12 +257,24 @@ export const tradeRouter = createTRPCRouter({
           refund,
           newPriceYes: priceYes(newQYes, newQNo, b),
           newPriceNo: priceNo(newQYes, newQNo, b),
+          _marketTitle: market.title,
         }
       })
 
       checkAfterSell(ctx.user.id)
+      notifyIfBigPosition(
+        ctx.user.name,
+        input.outcome,
+        result.refund,
+        result._marketTitle,
+      )
 
-      return result
+      return {
+        trade: result.trade,
+        refund: result.refund,
+        newPriceYes: result.newPriceYes,
+        newPriceNo: result.newPriceNo,
+      }
     }),
 
   history: authedProcedure

@@ -3,6 +3,7 @@ import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { tanstackStartCookies } from 'better-auth/tanstack-start'
 import { APIError, createAuthMiddleware } from 'better-auth/api'
 import { prisma } from '#/db'
+import { notifyNewUser } from '#/lib/slack'
 
 const ALLOWED_EMAIL_DOMAIN = '@stoik.io'
 
@@ -82,6 +83,11 @@ export const auth = betterAuth({
               },
             }),
           ])
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { name: true },
+          })
+          notifyNewUser(user?.name ?? 'A mysterious stranger')
         }
       }
     }),

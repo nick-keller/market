@@ -7,6 +7,7 @@ import { hasRole } from '#/lib/roles'
 import { priceYes } from '#/lib/lmsr'
 import { Role } from '#/generated/prisma/enums'
 import { checkAfterMarketCreate, checkAfterResolve } from '#/lib/achievement-checker'
+import { notifyMarketOpened, notifyMarketResolved } from '#/lib/slack'
 
 const INITIAL_BALANCE = 1000
 const DEFAULT_LIQUIDITY = 100
@@ -218,6 +219,7 @@ export const marketRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const market = await prisma.market.findUniqueOrThrow({
         where: { id: input.marketId },
+        include: { creator: { select: { name: true } } },
       })
       if (market.status !== 'PENDING') {
         throw new TRPCError({
@@ -250,6 +252,8 @@ export const marketRouter = createTRPCRouter({
           })
         }
       })
+
+      notifyMarketOpened(market.title, market.creator?.name ?? 'Anonymous')
 
       return { success: true }
     }),
@@ -375,6 +379,7 @@ export const marketRouter = createTRPCRouter({
       })
 
       checkAfterResolve(input.marketId)
+      notifyMarketResolved(market.title, input.winningOutcome)
 
       return { success: true }
     }),
