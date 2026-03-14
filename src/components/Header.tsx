@@ -1,15 +1,24 @@
-import { Link } from '@tanstack/react-router'
+import { useState } from 'react'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { Menu } from 'lucide-react'
 import { authClient } from '#/lib/auth-client'
 import { useTRPC } from '#/integrations/trpc/react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from '@/components/ui/popover'
 import NotificationMenu from '@/components/NotificationMenu'
 
 export default function Header() {
   const trpc = useTRPC()
   const { data: session, isPending } = authClient.useSession()
   const userId = session?.user?.id
+  const [menuOpen, setMenuOpen] = useState(false)
+  const navigate = useNavigate()
 
   const { data: profileData } = useQuery({
     ...trpc.user.profile.queryOptions({ userId: userId! }),
@@ -19,6 +28,37 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b bg-background/80 px-4 backdrop-blur-lg">
       <nav className="mx-auto flex max-w-6xl items-center gap-x-3 gap-y-2 py-3 sm:py-4">
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className="sm:hidden">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Menu</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-44 p-1">
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={() => {
+                setMenuOpen(false)
+                navigate({ to: '/' })
+              }}
+            >
+              Markets
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={() => {
+                setMenuOpen(false)
+                navigate({ to: '/users' })
+              }}
+            >
+              Leaderboard
+            </Button>
+          </PopoverContent>
+        </Popover>
+
         <div className="hidden items-center gap-1 sm:flex">
           <Button variant="ghost" size="sm" asChild>
             <Link to="/" className="no-underline" activeProps={{ className: 'bg-accent' }}>

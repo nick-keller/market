@@ -93,7 +93,7 @@ function UserProfile() {
       ) : (
         <Card className="mb-8">
           <CardContent>
-            <div className="flex items-center gap-5 p-6">
+            <div className="flex flex-col md:flex-row items-center gap-5 p-6">
               <Avatar className="h-16 w-16">
                 <AvatarFallback className="bg-accent text-xl font-bold text-primary">
                   {profile.name?.charAt(0).toUpperCase() || 'U'}

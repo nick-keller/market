@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTRPC } from '#/integrations/trpc/react'
@@ -7,6 +8,21 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import PriceBar from '@/components/PriceBar'
 import PriceChart from '@/components/PriceChart'
 import TradePanel from '@/components/TradePanel'
@@ -20,7 +36,10 @@ export const Route = createFileRoute('/markets/$marketId')({
   component: MarketDetail,
 })
 
-const statusVariant: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
+const statusVariant: Record<
+  string,
+  'default' | 'secondary' | 'outline' | 'destructive'
+> = {
   PENDING: 'secondary',
   OPEN: 'default',
   CLOSED: 'secondary',
@@ -108,10 +127,16 @@ function MarketDetail() {
   const userId = session?.user?.id
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: trpc.markets.get.queryKey({ id: marketId }) })
-    queryClient.invalidateQueries({ queryKey: trpc.trade.history.queryKey({ marketId, limit: 200 }) })
+    queryClient.invalidateQueries({
+      queryKey: trpc.markets.get.queryKey({ id: marketId }),
+    })
+    queryClient.invalidateQueries({
+      queryKey: trpc.trade.history.queryKey({ marketId, limit: 200 }),
+    })
     if (userId) {
-      queryClient.invalidateQueries({ queryKey: trpc.user.profile.queryKey({ userId }) })
+      queryClient.invalidateQueries({
+        queryKey: trpc.user.profile.queryKey({ userId }),
+      })
     }
   }
 
@@ -152,6 +177,9 @@ function MarketDetail() {
   const canValidateMarkets = me?.roles?.includes('VALIDATE_MARKETS') ?? false
   const canResolveMarkets = me?.roles?.includes('RESOLVE_MARKETS') ?? false
 
+  const [resolveDialogOpen, setResolveDialogOpen] = useState(false)
+  const [resolveOutcome, setResolveOutcome] = useState<string>('')
+
   if (marketPending || tradesPending || !market || !trades) {
     return <MarketDetailSkeleton />
   }
@@ -174,12 +202,13 @@ function MarketDetail() {
   const isCreator = userId === market.creatorId
   const canOpenMarket = market.status === 'PENDING' && canValidateMarkets
   const canResolve =
-    (market.status === 'OPEN' || market.status === 'CLOSED') && canResolveMarkets
+    (market.status === 'OPEN' || market.status === 'CLOSED') &&
+    canResolveMarkets
 
   return (
     <main className="mx-auto max-w-6xl px-4 pb-12 pt-8">
       <div className="mb-6">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-4">
           <div className="flex-1">
             <div className="mb-2 flex items-center gap-2">
               <Badge variant={statusVariant[market.status] ?? 'secondary'}>
@@ -209,7 +238,13 @@ function MarketDetail() {
               )}
               <span>Vol: {Number(state.volume).toFixed(2)}</span>
               <span>
-                Total invested: <span className="font-medium text-foreground">{(market as { totalInvested?: number }).totalInvested?.toFixed(2) ?? Number(state.volume).toFixed(2)}</span>
+                Total invested:{' '}
+                <span className="font-medium text-foreground">
+                  {(
+                    market as { totalInvested?: number }
+                  ).totalInvested?.toFixed(2) ??
+                    Number(state.volume).toFixed(2)}
+                </span>
               </span>
               {market.closeTime && (
                 <span>
@@ -233,7 +268,11 @@ function MarketDetail() {
                 size="sm"
                 variant="destructive"
                 onClick={() => {
-                  if (window.confirm('Delete this pending market? This cannot be undone.')) {
+                  if (
+                    window.confirm(
+                      'Delete this pending market? This cannot be undone.',
+                    )
+                  ) {
                     deleteMutation.mutate({ marketId })
                   }
                 }}
@@ -244,28 +283,14 @@ function MarketDetail() {
             </div>
           )}
           {canResolve && (
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  resolveMutation.mutate({ marketId, winningOutcome: 'YES' })
-                }
-                disabled={resolveMutation.isPending}
-              >
-                Resolve YES
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  resolveMutation.mutate({ marketId, winningOutcome: 'NO' })
-                }
-                disabled={resolveMutation.isPending}
-              >
-                Resolve NO
-              </Button>
-            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setResolveDialogOpen(true)}
+              disabled={resolveMutation.isPending}
+            >
+              Resolve
+            </Button>
           )}
 
           {market.status === 'RESOLVED' && market.winningOutcome && (
@@ -304,8 +329,8 @@ function MarketDetail() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="md:grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6 w-full">
           <Card>
             <CardContent className="p-5">
               <h2 className="mb-4 text-sm font-semibold">Price History</h2>
@@ -386,6 +411,62 @@ function MarketDetail() {
           )}
         </div>
       </div>
+
+      <Dialog
+        open={resolveDialogOpen}
+        onOpenChange={(open) => {
+          setResolveDialogOpen(open)
+          if (!open) setResolveOutcome('')
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Resolve Market</DialogTitle>
+            <DialogDescription>{market.title}</DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Select value={resolveOutcome} onValueChange={setResolveOutcome}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select winning outcome" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="YES">YES</SelectItem>
+                <SelectItem value="NO">NO</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setResolveDialogOpen(false)
+                setResolveOutcome('')
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={!resolveOutcome || resolveMutation.isPending}
+              onClick={() => {
+                resolveMutation.mutate(
+                  {
+                    marketId,
+                    winningOutcome: resolveOutcome as Outcome,
+                  },
+                  {
+                    onSuccess: () => {
+                      setResolveDialogOpen(false)
+                      setResolveOutcome('')
+                    },
+                  },
+                )
+              }}
+            >
+              {resolveMutation.isPending ? 'Resolving...' : 'Resolve'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

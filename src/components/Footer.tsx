@@ -12,7 +12,12 @@ export default function Footer() {
     <footer className="mt-20 border-t px-4 pb-14 pt-10 text-muted-foreground">
       <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
         <p className="m-0 text-sm">
-          &copy; {year} Stoik Market. All rights reserved.
+          <Link
+            to="/rules"
+            className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Rules
+          </Link>
           {session?.user && (
             <>
               {' · '}
